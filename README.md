@@ -43,4 +43,37 @@ etcd03
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
 ```
 
+On Each Etd Node
+Backup original config
+```shell
+mv /etc/haproxy/haproxy.cfg{,.back}
+```
+
+Create a new one with the following:
+```shell
+global
+    user haproxy
+    group haproxy
+
+defaults
+    mode http
+    log global
+    retries 2
+    timeout connect 3000ms
+    timeout server 5000ms
+    timeout client 5000ms
+
+frontend kubernetes
+    bind 192.168.1.49:6443
+    option tcplog
+    mode tcp
+    default_backend kubernetes-master-nodes
+
+backend kubernetes-master-nodes
+    mode tcp
+    balance roundrobin
+    option tcp-check
+    server k8s-master-0 192.168.1.50:6443 check fall 3 rise 2
+    server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
+```
 
