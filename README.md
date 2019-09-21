@@ -12,5 +12,35 @@ All installed with Ubuntu 18.04
 
 Built on Promox Cluster
 
+Network:
+
+VIP: 192.168.1.49
+master01: 192.168.1.50
+master02: 192.168.1.51
+etcd01: 192.168.1.52
+etcd02: 192.168.1.53
+etcd03: 192.168.1.54
+worker01: 192.168.1.55
+worker02: 192.168.1.56
+worker03: 192.168.1.57
+
+## Configure HAProxy and Heartbeat
+
+Across 3 etcd Nodes
+
+etcd01
+```shell
+sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+```
+
+etcd02
+```shell
+sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+```
+
+etcd03
+```shell
+sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+```
 
 
