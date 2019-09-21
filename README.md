@@ -1,12 +1,13 @@
 # homelab-multinode
  
- Create 8 nodes (vm's)
+ Create 10 nodes (vm's)
 
  Minimum requirements for this example:
 
-2 servers with 2 CPUs & 2 GB of RAM for the masters (50Gb hdd)
-3 servers with 4 CPUs & 4 (8 recommended) GB of RAM for the workers (50Gb hdd)
-3 servers with 2 CPUs & 2 GB of RAM for Etcd & HAProxy (32Gb hdd)
+2 servers with 2 CPUs & 4 GB of RAM for the masters (50Gb hdd)
+3 servers with 4 CPUs & 8 GB of RAM for the workers (50Gb hdd)
+3 servers with 2 CPUs & 3 GB of RAM for Etcd (32Gb hdd)
+2 servers with 2 CPUs and 2GB of RAM for HAProxy (loadbalancing) (20Gb hdd)
 
 All installed with Ubuntu 18.04
 
@@ -23,27 +24,26 @@ etcd03: 192.168.1.54
 worker01: 192.168.1.55
 worker02: 192.168.1.56
 worker03: 192.168.1.57
+proxy01: 192.168.1.58
+proxy02: 192.168.1.59
+
+If short on resources, proxy01/02 could be combined with etcd01/02
 
 ## Configure HAProxy and Heartbeat
 
-Across 3 etcd Nodes
+Across 2 Proxy Nodes
 
-etcd01
+proxy01
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
 ```
 
-etcd02
+proxy02
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
 ```
 
-etcd03
-```shell
-sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
-```
-
-On Each Etd Node
+On Each Proxy Node
 Backup original config
 ```shell
 mv /etc/haproxy/haproxy.cfg{,.back}
@@ -77,18 +77,18 @@ backend kubernetes-master-nodes
     server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
 ```
 
-On Each Etcd Node, modify /etc/sysctl.conf with the following line
+On Each Proxy Node, modify /etc/sysctl.conf with the following line
 ```shell
 net.ipv4.ip_nonlocal_bind=1
 ```
 
-Restart haproxy on each ETCD node.
+Restart haproxy on each Proxy node.
 ```shell
 sudo systemctl enable haproxy && sudo systemctl restart haproxy
 ```
 and then
 
-REBOOT each etcd node
+REBOOT each Proxy node
 
 after reboot, check to see the that haproxy has started and is listening
 ```shell
