@@ -77,3 +77,21 @@ backend kubernetes-master-nodes
     server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
 ```
 
+On Each Etcd Node, modify /etc/sysctl.conf with the following line
+```shell
+net.ipv4.ip_nonlocal_bind=1
+```
+
+Restart haproxy on each ETCD node.
+```shell
+sudo systemctl enable haproxy && sudo systemctl restart haproxy
+```
+and then
+
+REBOOT each etcd node
+
+after reboot, check to see the that haproxy has started and is listening
+```shell
+netstat -ntulp
+```
+
