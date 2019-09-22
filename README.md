@@ -31,25 +31,28 @@ If short on resources, proxy01/02 could be combined with etcd01/02
 
 ## Configure HAProxy and Heartbeat
 
-Across 2 Proxy Nodes
+On each HAProxy node, run the following:
 
 proxy01
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+
+mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
 proxy02
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+
+mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-On Each Proxy Node
-Backup original config
+Add the below line to the <b>/etc/systctl.conf</b> file on each HAProxy node
 ```shell
-mv /etc/haproxy/haproxy.cfg{,.back}
+net.ipv4.ip_nonlocal_bind=1
 ```
 
-Create a new one with the following:
+Create a new haproxy.cfg on each HAProxy node:
 ```shell
 global
     user haproxy
@@ -77,20 +80,9 @@ backend kubernetes-master-nodes
     server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
 ```
 
-On Each Proxy Node, modify /etc/sysctl.conf with the following line
-```shell
-net.ipv4.ip_nonlocal_bind=1
-```
+REBOOT each HAProxy node
 
-Restart haproxy on each Proxy node.
-```shell
-sudo systemctl enable haproxy && sudo systemctl restart haproxy
-```
-and then
-
-REBOOT each Proxy node
-
-after reboot, check to see the that haproxy has started and is listening
+Upon a successful reboot, check to see the that haproxy has started and is listening on the 192.168.1.49 address
 ```shell
 netstat -ntulp
 ```
