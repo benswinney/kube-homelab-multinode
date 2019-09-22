@@ -1,8 +1,6 @@
 # homelab-multinode
- 
- Create 10 nodes (vm's)
 
- Minimum requirements:
+Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 10 nodes (VM's) with the following minimum requirements as below:
 
 | Total | Role | CPU | RAM | HDD |
 |-------|------|-----|-----|-----|
@@ -13,25 +11,22 @@
 
 * These nodes will be used to provide LoadBalancing for the masters
 
-All installed with Ubuntu 18.04
+I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
-Built on Promox Cluster
+Network layout:
+* Virtual IP (for LoadBalancing) : 192.168.1.49
+* Master Node 01 (master01) : 192.168.1.50
+* Master Node 02 (master02) : 192.168.1.51
+* Etcd Node 01 (etcd01) : 192.168.1.52
+* Etcd Node 02 (etcd02) : 192.168.1.53
+* Etcd Node 03 (etcd03) : 192.168.1.54
+* HAProxy Node 01 (proxy01) : 192.168.1.55
+* HAProxy Node 02 (proxy02) : 192.168.1.56
+* Worker Node 01 (worker01) : 192.168.1.57
+* Worker Node 02 (worker02) : 192.168.1.58
+* Worker Node 03 (worker03) : 192.168.1.59
 
-Network:
-
-VIP: 192.168.1.49
-master01: 192.168.1.50
-master02: 192.168.1.51
-etcd01: 192.168.1.52
-etcd02: 192.168.1.53
-etcd03: 192.168.1.54
-worker01: 192.168.1.55
-worker02: 192.168.1.56
-worker03: 192.168.1.57
-proxy01: 192.168.1.58
-proxy02: 192.168.1.59
-
-If short on resources, proxy01/02 could be combined with etcd01/02
+If you're short on resources, proxy01/02 could be combined with etcd01/02
 
 ## Configure HAProxy and Heartbeat
 
