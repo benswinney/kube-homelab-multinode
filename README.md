@@ -2,9 +2,13 @@
  
  Create 10 nodes (vm's)
 
- Minimum requirements for this example:
+ Minimum requirements:
 
-2 servers with 2 CPUs & 4 GB of RAM for the masters (50Gb hdd)
+| Total | Role | CPU | RAM | HDD |
+|-------|------|-----|-----|-----|
+| 2     | master | 2 | 4Gb | 50Gb |
+
+ 2 servers with 2 CPUs & 4 GB of RAM for the masters (50Gb hdd)
 3 servers with 4 CPUs & 8 GB of RAM for the workers (50Gb hdd)
 3 servers with 2 CPUs & 3 GB of RAM for Etcd (32Gb hdd)
 2 servers with 2 CPUs and 2GB of RAM for HAProxy (loadbalancing) (20Gb hdd)
@@ -37,22 +41,22 @@ proxy01
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
 
-mv /etc/haproxy/haproxy.cfg{,.bkp}
+sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
 proxy02
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
 
-mv /etc/haproxy/haproxy.cfg{,.bkp}
+sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-Add the below line to the <b>/etc/systctl.conf</b> file on each HAProxy node
+Add the below line to the `/etc/systctl.conf` file on each HAProxy node
 ```shell
 net.ipv4.ip_nonlocal_bind=1
 ```
 
-Create a new haproxy.cfg on each HAProxy node:
+Create a new `/etc/haproxy/haproxy.cfg` on each HAProxy node:
 ```shell
 global
     user haproxy
