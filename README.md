@@ -7,11 +7,11 @@
 | Total | Role | CPU | RAM | HDD |
 |-------|------|-----|-----|-----|
 | 2     | master | 2 | 4Gb | 50Gb |
+| 3     | etcd | 2   | 3Gb | 32Gb |
+| 2     | haproxy* | 2 | 2Gb | 20Gb |
+| 3     | worker | 4 | 8Gb | 50Gb |
 
- 2 servers with 2 CPUs & 4 GB of RAM for the masters (50Gb hdd)
-3 servers with 4 CPUs & 8 GB of RAM for the workers (50Gb hdd)
-3 servers with 2 CPUs & 3 GB of RAM for Etcd (32Gb hdd)
-2 servers with 2 CPUs and 2GB of RAM for HAProxy (loadbalancing) (20Gb hdd)
+* These nodes will be used to provide LoadBalancing for the masters
 
 All installed with Ubuntu 18.04
 
