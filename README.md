@@ -32,16 +32,16 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02
 
 On each HAProxy node, run the following:
 
-proxy01
+<b>proxy01</b>
 ```shell
-sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-proxy02
+<b>proxy02</b>
 ```shell
-sudo apt update && sudo apt upgrade -y && sudo apt install haproxy -y
+sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
@@ -79,10 +79,32 @@ backend kubernetes-master-nodes
     server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
 ```
 
+Enable and Start HAProxy & Heartbeat
+```shell
+<b>proxy01</b> sudo systemctl enable haproxy && sudo systemctl start haproxy
+<b>proxy01</b> sudo systemctl enable heartbeat && sudo systemctl start heartbeat
+<b>proxy02</b> sudo systemctl enable haproxy && sudo systemctl start haproxy
+<b>proxy02</b> sudo systemctl enable heartbeat && sudo sytemtctl start heartbeat
+```
+
 REBOOT each HAProxy node
 
 Upon a successful reboot, check to see the that haproxy has started and is listening on the 192.168.1.49 address
 ```shell
 netstat -ntulp
+```
+
+Create authkeys `/etc/ha.d/authkeys` on both HAProxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
+
+Firstly generate a md5sum password
+```shell
+echo -n somepassword | md5sum
+9c42a1346e333a770904b2a2b37fa7d3
+```
+
+Then add to the `/etc/ha.d/authkeys` file
+```shell
+auth 1
+1 md5 9c42a1346e333a770904b2a2b37fa7d3
 ```
 
