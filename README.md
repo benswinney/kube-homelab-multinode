@@ -28,7 +28,7 @@ Network layout:
 
 If you're short on resources, proxy01/02 could be combined with etcd01/02
 
-## Configure HAProxy and Heartbeat
+## 1. Configure HAProxy and Heartbeat
 
 On each HAProxy node, run the following:
 
@@ -112,7 +112,7 @@ Create `/etc/ha.d/ha.cf` on each HAProxy node
 
 They will differ slightly, as can be seen below
 
-*proxy01*
+<b>proxy01</b>
 ```shell
 #       keepalive: how many seconds between heartbeats
 #
@@ -142,7 +142,7 @@ node proxy01
 node proxy02
 ```
 
-*proxy02*
+<b>proxy02</b>
 ```shell
 #       keepalive: how many seconds between heartbeats
 #
@@ -181,7 +181,7 @@ Restart the heartbeat service on both HAProxy nodes
 ```shell
 sudo systemctl restart heartbeat
 ```
-## Kubernetes Configuration
+## 2. Kubernetes Configuration
 
 ### Configure Kubernetes & Docker Repositories on ALL Nodes
 ```shell
@@ -252,7 +252,78 @@ sudo systemctl daemon-reload && sudo systemctl restart docker
 sudo apt install -y kubelet kubeadm kubectl
 ```
 
-### Hold Kuberneted Packages
+### Hold Kubernetes Packages
 ```shell
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
+
+### Enable & Start Kubelet (if not already started)
+```shell
+sudo systemctl enable kubelet && sudo systemctl start kubelet
+```
+
+## 3. Etcd Cluster Configuration
+
+### Create new etcd kubelet services configuration file
+On ALL Etcd Nodes, create a new kubelet systemd configuration file, with a higher precedence that the kubelet supplied version just installed
+```shell
+cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
+[Service]
+ExecStart=
+ExecStart=/usr/bin/kubelet --address=127.0.0.1 --pod-manifest-path=/etc/kubernetes/manifests --cgroup-driver=systemd
+Restart=always
+EOF
+```
+
+Reload and Restart Kubelet on each of the Etcd Nodes
+```shell
+sudo systemctl daemon-reload && sudo systemctl restart kubelet
+```
+
+### Generate kubeadm configuration files for all Etcd nodes
+
+<b>etcd01</b>
+```shell
+export HOST0=192.168.1.52 # etcd01
+export HOST1=192.168.1.53 # etcd02
+export HOST2=192.168.1.54 # etcd03
+
+mkdir -p /tmp/${HOST0}/ /tmp/${HOST1}/ /tmp/${HOST2}/
+
+ETCDHOSTS=(${HOST0} ${HOST1} ${HOST2})
+NAMES=("infra0" "infra1" "infra2")
+
+for i in "${!ETCDHOSTS[@]}"; do
+HOST=${ETCDHOSTS[$i]}
+NAME=${NAMES[$i]}
+cat << EOF > /tmp/${HOST}/kubeadmcfg.yaml
+apiVersion: "kubeadm.k8s.io/v1beta2"
+kind: ClusterConfiguration
+etcd:
+    local:
+        serverCertSANs:
+        - "${HOST}"
+        peerCertSANs:
+        - "${HOST}"
+        extraArgs:
+            initial-cluster: ${NAMES[0]}=https://${ETCDHOSTS[0]}:2380,${NAMES[1]}=https://${ETCDHOSTS[1]}:2380,${NAMES[2]}=https://${ETCDHOSTS[2]}:2380
+            initial-cluster-state: new
+            name: ${NAME}
+            listen-peer-urls: https://${HOST}:2380
+            listen-client-urls: https://${HOST}:2379
+            advertise-client-urls: https://${HOST}:2379
+            initial-advertise-peer-urls: https://${HOST}:2380
+EOF
+done
+```
+
+### Generate the Certificate Authority
+<b>etd01</b>
+```shell
+sudo kubeadm init phase certs etcd-ca
+```
+
+This creates two files
+
+    `/etc/kubernetes/pki/etcd/ca.crt`
+    `/etc/kubernetes/pki/etcd/ca.key`
