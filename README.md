@@ -108,3 +108,75 @@ auth 1
 1 md5 9c42a1346e333a770904b2a2b37fa7d3
 ```
 
+Create `/etc/ha.d/ha.cf` on each HAProxy node
+
+They will differ slightly, as can be seen below
+*proxy01*
+```shell
+#       keepalive: how many seconds between heartbeats
+#
+keepalive 2
+#
+#       deadtime: seconds-to-declare-host-dead
+#
+deadtime 10
+#
+#       What UDP port to use for udp or ppp-udp communication?
+#
+udpport 694
+bcast en0
+mcast en0 225.255.255.0 694 1 0
+ucast en0 192.168.1.55
+#
+#       What interfaces to heartbeat over?
+udp en0
+#
+#       Facility to use for syslog()/logger (alternative to log/debugfile)
+#
+logfacility local0
+#
+#       Tell what machines are in the cluster
+#       node    nodename ...    -- must match uname -n
+node proxy01
+node proxy02
+```
+
+*proxy02*
+```shell
+#       keepalive: how many seconds between heartbeats
+#
+keepalive 2
+#
+#       deadtime: seconds-to-declare-host-dead
+#
+deadtime 10
+#
+#       What UDP port to use for udp or ppp-udp communication?
+#
+udpport 694
+bcast en0
+mcast en0 225.255.255.0 694 1 0
+ucast en0 192.168.1.56
+#
+#       What interfaces to heartbeat over?
+udp en0
+#
+#       Facility to use for syslog()/logger (alternative to log/debugfile)
+#
+logfacility local0
+#
+#       Tell what machines are in the cluster
+#       node    nodename ...    -- must match uname -n
+node proxy01
+node proxy02
+```
+
+Create a `/etc/ha.d/haresources` on both HAProxy nodes
+```shell
+proxy01 192.168.1.49
+```
+
+Restart the heartbeat service on both HAProxy nodes
+```shell
+sudo systemctl restart heartbeat
+```
