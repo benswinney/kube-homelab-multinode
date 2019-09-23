@@ -81,10 +81,10 @@ backend kubernetes-master-nodes
 
 Enable and Start HAProxy & Heartbeat
 ```shell
-<b>proxy01</b> sudo systemctl enable haproxy && sudo systemctl start haproxy
-<b>proxy01</b> sudo systemctl enable heartbeat && sudo systemctl start heartbeat
-<b>proxy02</b> sudo systemctl enable haproxy && sudo systemctl start haproxy
-<b>proxy02</b> sudo systemctl enable heartbeat && sudo sytemtctl start heartbeat
+*proxy01* sudo systemctl enable haproxy && sudo systemctl start haproxy
+*proxy01* sudo systemctl enable heartbeat && sudo systemctl start heartbeat
+*proxy02* sudo systemctl enable haproxy && sudo systemctl start haproxy
+*proxy02* sudo systemctl enable heartbeat && sudo sytemtctl start heartbeat
 ```
 
 REBOOT each HAProxy node
