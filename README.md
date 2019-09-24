@@ -13,6 +13,8 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
+Kubernetes Version: 1.16 
+
 Network layout:
 * Virtual IP (for LoadBalancing) : 192.168.1.49
 * Master / Control Plane Node 01 (master01) : 192.168.1.50
@@ -561,3 +563,39 @@ kubemaster01   Ready    master   2d16h   v1.16.0   192.168.1.50   <none>        
 We can now add the second Master / Control Place (master02)
 
 ### Configure second Master / Control Plane Node (master02)
+
+Run the join command that was copied in the previous step to join master02 to the Kubernetes cluster
+
+<b>master02</b>
+```shell
+sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
+```
+
+Check for all the Pods to be deployed and in Running and the status of the cluster
+```shell
+kubectl get pods -n kube-system -o wide
+
+NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
+coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      kubemaster01   <none>           <none>
+coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      kubemaster01   <none>           <none>
+kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   kubemaster01   <none>           <none>
+kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   kubemaster01   <none>           <none>
+kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   kubemaster01   <none>           <none>
+kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   kubemaster01   <none>           <none>
+kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   kubemaster01   <none>           <none>
+weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+
+kubectl get nodes -o wide
+
+NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+kubemaster01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+kubemaster02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+
+```
+
+Now both Master / Control Plane nodes are configured, running behing an HAProxy LoadBalancer. Next we'll configure the workers.
+
