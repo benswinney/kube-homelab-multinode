@@ -4,19 +4,19 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 
 | Total | Role | CPU | RAM | HDD |
 |-------|------|-----|-----|-----|
-| 2     | master | 2 | 4Gb | 50Gb |
+| 2     | master / control plane | 2 | 4Gb | 50Gb |
 | 3     | etcd | 2   | 3Gb | 32Gb |
 | 2     | haproxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-* These nodes will be used to provide LoadBalancing for the masters
+* These nodes will be used to provide LoadBalancing for the masters / control planes
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
 Network layout:
 * Virtual IP (for LoadBalancing) : 192.168.1.49
-* Master Node 01 (master01) : 192.168.1.50
-* Master Node 02 (master02) : 192.168.1.51
+* Master / Control Plane Node 01 (master01) : 192.168.1.50
+* Master / Control Plane Node 02 (master02) : 192.168.1.51
 * Etcd Node 01 (etcd01) : 192.168.1.52
 * Etcd Node 02 (etcd02) : 192.168.1.53
 * Etcd Node 03 (etcd03) : 192.168.1.54
@@ -324,6 +324,154 @@ sudo kubeadm init phase certs etcd-ca
 ```
 
 This creates two files
+`/etc/kubernetes/pki/etcd/ca.crt`
+`/etc/kubernetes/pki/etcd/ca.key`
 
-    `/etc/kubernetes/pki/etcd/ca.crt`
-    `/etc/kubernetes/pki/etcd/ca.key`
+Create certificates for each Etcd node (etcd01, etcd02, etcd03)
+```shell
+kubeadm init phase certs etcd-server --config=/tmp/${HOST2}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config=/tmp/${HOST2}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config=/tmp/${HOST2}/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config=/tmp/${HOST2}/kubeadmcfg.yaml
+cp -R /etc/kubernetes/pki /tmp/${HOST2}/
+
+# cleanup non-reusable certificates
+find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
+
+kubeadm init phase certs etcd-server --config=/tmp/${HOST1}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config=/tmp/${HOST1}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config=/tmp/${HOST1}/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config=/tmp/${HOST1}/kubeadmcfg.yaml
+cp -R /etc/kubernetes/pki /tmp/${HOST1}/
+find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
+
+kubeadm init phase certs etcd-server --config=/tmp/${HOST0}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config=/tmp/${HOST0}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config=/tmp/${HOST0}/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config=/tmp/${HOST0}/kubeadmcfg.yaml
+
+# clean up certs that should not be copied off this host
+find /tmp/${HOST2} -name ca.key -type f -delete
+find /tmp/${HOST1} -name ca.key -type f -delete
+```
+
+### Copy kubeadm configuration and certificates files to the correct etcd node
+<b>etcd02</b>
+```shell
+USER=bens
+HOST=${HOST1}
+scp -r /tmp/${HOST}/* ${USER}@${HOST}:
+ssh ${USER}@${HOST}
+USER@HOST $ sudo -Es
+root@HOST $ chown -R root:root pki
+root@HOST $ mv pki /etc/kubernetes/
+```
+
+<b>etcd03</b>
+```shell
+USER=bens
+HOST=${HOST2}
+scp -r /tmp/${HOST}/* ${USER}@${HOST}:
+ssh ${USER}@${HOST}
+USER@HOST $ sudo -Es
+root@HOST $ chown -R root:root pki
+root@HOST $ mv pki /etc/kubernetes/
+```
+
+### Confirm that the full list of required files exist on each Etcd node
+<b>etcd01</b>
+```shell
+/tmp/${HOST0}
+└── kubeadmcfg.yaml
+---
+/etc/kubernetes/pki
+├── apiserver-etcd-client.crt
+├── apiserver-etcd-client.key
+└── etcd
+    ├── ca.crt
+    ├── ca.key
+    ├── healthcheck-client.crt
+    ├── healthcheck-client.key
+    ├── peer.crt
+    ├── peer.key
+    ├── server.crt
+    └── server.key
+```
+
+<b>etcd02</b>
+```shell
+$HOME
+└── kubeadmcfg.yaml
+---
+/etc/kubernetes/pki
+├── apiserver-etcd-client.crt
+├── apiserver-etcd-client.key
+└── etcd
+    ├── ca.crt
+    ├── healthcheck-client.crt
+    ├── healthcheck-client.key
+    ├── peer.crt
+    ├── peer.key
+    ├── server.crt
+    └── server.key
+```
+
+<b>etcd03</b>
+```shell
+$HOME
+└── kubeadmcfg.yaml
+---
+/etc/kubernetes/pki
+├── apiserver-etcd-client.crt
+├── apiserver-etcd-client.key
+└── etcd
+    ├── ca.crt
+    ├── healthcheck-client.crt
+    ├── healthcheck-client.key
+    ├── peer.crt
+    ├── peer.key
+    ├── server.crt
+    └── server.key
+```
+
+### Create Static Pod Manifests on each Etcd node
+<b>etcd01</b>
+```shell
+sudo kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
+```
+
+<b>etcd02</b>
+```shell
+kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
+```
+
+<b>etcd03</b>
+```shell
+kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
+```
+
+Once the kubeadm commands have completed, check the Cluster health (it may take a few minutes for the Etcd Cluster to become stable)
+```shell
+docker run --rm -it \
+--net host \
+-v /etc/kubernetes:/etc/kubernetes quay.io/coreos/etcd:${ETCD_TAG} etcdctl \
+--cert-file /etc/kubernetes/pki/etcd/peer.crt \
+--key-file /etc/kubernetes/pki/etcd/peer.key \
+--ca-file /etc/kubernetes/pki/etcd/ca.crt \
+--endpoints https://${HOST0}:2379 cluster-health
+```
+
+`${HOST0}` should be set to etcd01 IP Address
+`${ETCD_TAG}` should be set to the version of etcd image
+
+Output should be similar to below
+```shell
+member 238b72cdd26e304f is healthy: got healthy result from https://192.168.1.52:2379
+member 8034142cf01c5d1c is healthy: got healthy result from https://192.168.1.53:2379
+member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.54:2379
+cluster is healthy
+```
+
+## 4. Configure HA Master (aka Control Plane) Nodes 
+
+
