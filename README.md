@@ -656,3 +656,62 @@ kube-system            coredns-58ddcb86c5-cxlnl                      1/1     Run
 kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Running   0          12m     10.36.0.5      worker01   <none>           <none>
 ```
 
+## 6. Add MetalLB as an Internal Load Balancer
+
+Apply MetalLB deployment
+<b>master01</b>
+```shell
+kubectl apply -f metallb/metallb.yaml
+```
+
+Next apply the MetalLB ConfigMap
+```shell
+kubectl apply -f metallb/metallb-configmap.yaml
+```
+
+You can edit the ConfigMap after deployment by simply editing the configmap
+```shell
+kubectl edit configmap config -n metallb-system
+```
+
+## 7. Install NFS Storage Provisioner
+
+To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
+
+<b>master01</b>
+```shell
+kubectl create -f nfs-client/deploy/rbac.yaml
+kubectl apply -f nfs-client/deploy/deployment.yaml
+kubectl apply -f nfs-client/deploy/class.yaml
+```
+
+<b>Optional</b>
+You can set the NFS Storage Provisioner as the default storage class which will make things a bit simpler.
+```shell
+kubectl patch deployment nfs-client-provisioner -p '{"spec":{"template":{"spec":{"serviceAccount":"nfs-client-provisioner"}}}}'
+kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
+## 8. Helm
+<b>master01</b>
+```shell
+kubectl create -f helm/helm-rbac.yaml
+kubectl create serviceaccount --namespace kube-system tiller
+kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+sudo snap install helm --classic
+helm init --upgrade
+kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+```
+
+Install the helm cli on the second Master / Control Plane node. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
+<b>master02</b>
+```shell
+sudo snap install helm --classic
+helm init
+```
+
+
+
+
+
+
