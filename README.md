@@ -546,18 +546,18 @@ Check for all the Pods to be deployed and in Running and the status of the clust
 kubectl get pods -n kube-system -o wide
 
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
-coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d16h   10.32.0.2      kubemaster01   <none>           <none>
-coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d16h   10.32.0.3      kubemaster01   <none>           <none>
-kube-apiserver-kubemaster01            1/1     Running   1          2d16h   192.168.1.50   kubemaster01   <none>           <none>
-kube-controller-manager-kubemaster01   1/1     Running   3          2d16h   192.168.1.50   kubemaster01   <none>           <none>
-kube-proxy-lwx2k                       1/1     Running   1          2d16h   192.168.1.50   kubemaster01   <none>           <none>
-kube-scheduler-kubemaster01            1/1     Running   2          2d16h   192.168.1.50   kubemaster01   <none>           <none>
-weave-net-gktp8                        2/2     Running   2          2d16h   192.168.1.50   kubemaster01   <none>           <none>
+coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d16h   10.32.0.2      master01   <none>           <none>
+coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d16h   10.32.0.3      master01   <none>           <none>
+kube-apiserver-kubemaster01            1/1     Running   1          2d16h   192.168.1.50   master01   <none>           <none>
+kube-controller-manager-kubemaster01   1/1     Running   3          2d16h   192.168.1.50   master01   <none>           <none>
+kube-proxy-lwx2k                       1/1     Running   1          2d16h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-kubemaster01            1/1     Running   2          2d16h   192.168.1.50   master01   <none>           <none>
+weave-net-gktp8                        2/2     Running   2          2d16h   192.168.1.50   master01   <none>           <none>
 
 kubectl get nodes -o wide
 
 NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
-kubemaster01   Ready    master   2d16h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master01   Ready    master   2d16h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
 We can now add the second Master / Control Place (master02)
@@ -576,26 +576,77 @@ Check for all the Pods to be deployed and in Running and the status of the clust
 kubectl get pods -n kube-system -o wide
 
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
-coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      kubemaster01   <none>           <none>
-coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      kubemaster01   <none>           <none>
-kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   kubemaster01   <none>           <none>
-kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
-kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   kubemaster01   <none>           <none>
-kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
-kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
-kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   kubemaster01   <none>           <none>
-kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   kubemaster01   <none>           <none>
-kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   kubemaster02   <none>           <none>
-weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   kubemaster01   <none>           <none>
-weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   kubemaster02   <none>           <none>
+coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      master01   <none>           <none>
+coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      master01   <none>           <none>
+kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
+kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   master01   <none>           <none>
+weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   master02   <none>           <none>
 
 kubectl get nodes -o wide
 
 NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
-kubemaster01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
-kubemaster02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 
 ```
 
-Now both Master / Control Plane nodes are configured, running behing an HAProxy LoadBalancer. Next we'll configure the workers.
+Now both Master / Control Plane nodes (master01 / master02) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02). 
+
+Next we'll configure the workers.
+
+## 5. Add Worker Nodes (worker01, worker02, worker03)
+Adding the additional worker nodes is simple.
+
+<b>worker01</b>
+```shell
+sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
+```
+
+<b>worker02</b>
+```shell
+sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
+```
+
+<b>worker03</b>
+```shell
+sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
+```
+
+After a few minutes, the nodes will start to appear within the cluster
+
+<b>master01</b>
+```shell
+kubectl get nodes -o wide
+
+NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+master01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master02   Ready    master   2d19h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker01   Ready    <none>   2d19h   v1.16.0   192.168.1.55   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker02   Ready    <none>   2d19h   v1.16.0   192.168.1.56   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.57   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+```
+
+## 6. Redeploy CoreDNS Services
+Due to a bug/feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master/control plane or worker nodes), then it will deploy entirely on the same node (e.g. master01).
+
+To resolve this, we can restart the deployment of coredns, which will deploy across different nodes to provide the HA level of redundancy we've come to expect from Kubernetes.
+
+<b>master01</b>
+```shell
+kubectl -n kube-system rollout restart deployment coredns
+```
+
+```shell
+kubectl get pods -A -o wide | grep coredns
+
+kube-system            coredns-58ddcb86c5-cxlnl                      1/1     Running   0          12m     10.42.0.4      worker03   <none>           <none>
+kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Running   0          12m     10.36.0.5      worker01   <none>           <none>
+```
 
