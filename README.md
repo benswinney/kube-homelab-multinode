@@ -752,7 +752,7 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiw
 kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 ```
 
-Connect via https://<b><ExternalIP></b>
+Connect via https://<b>ExternalIP</b>
 
 
 
