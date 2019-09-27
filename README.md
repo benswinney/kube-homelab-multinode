@@ -501,7 +501,7 @@ Create a file called `kubeadm-config.yaml`
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: stable
+kubernetesVersion: v1.16.0 
 apiServer:
   certSANs:
   - "192.168.1.49"
@@ -515,6 +515,9 @@ etcd:
         caFile: /etc/kubernetes/pki/etcd/ca.crt
         certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
         keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
+networking:
+  podSubnet: 10.11.0.0/16
+  serviceSubnet: 10.96.0.0/12
 ```
 
 Initilise with `kubeadm`
@@ -753,3 +756,6 @@ kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 ```
 
 Connect via https://<b>ExternalIP</b>
+
+
+
