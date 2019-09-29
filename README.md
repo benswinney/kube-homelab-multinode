@@ -36,7 +36,7 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 
 On each HAProxy node, run the following:
 
-#### proxy01
+### proxy01
 
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
@@ -119,7 +119,7 @@ Create `/etc/ha.d/ha.cf` on each HAProxy node
 
 They will differ slightly, as can be seen below
 
-**proxy01**
+#### proxy01
 
 ```shell
 #       keepalive: how many seconds between heartbeats
@@ -150,7 +150,7 @@ node proxy01
 node proxy02
 ```
 
-**proxy02**
+#### proxy02
 
 ```shell
 #       keepalive: how many seconds between heartbeats
@@ -302,7 +302,8 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 
 ### Generate kubeadm configuration files for all Etcd nodes
 
-<b>etcd01</b>
+#### etcd01
+
 ```shell
 export HOST0=192.168.1.53 # etcd01
 export HOST1=192.168.1.54 # etcd02
@@ -338,7 +339,9 @@ done
 ```
 
 ### Generate the Certificate Authority
-<b>etd01</b>
+
+#### etd01
+
 ```shell
 sudo kubeadm init phase certs etcd-ca
 ```
@@ -377,7 +380,8 @@ find /tmp/${HOST1} -name ca.key -type f -delete
 
 ### Copy kubeadm configuration and certificates files to the correct etcd node
 
-<b>etcd02</b>
+#### etcd02
+
 ```shell
 USER=bens
 HOST=${HOST1}
@@ -388,7 +392,8 @@ root@HOST $ chown -R root:root pki
 root@HOST $ mv pki /etc/kubernetes/
 ```
 
-<b>etcd03</b>
+#### etcd03
+
 ```shell
 USER=bens
 HOST=${HOST2}
@@ -401,7 +406,8 @@ root@HOST $ mv pki /etc/kubernetes/
 
 ### Confirm that the full list of required files exist on each Etcd node
 
-<b>etcd01</b>
+#### etcd01
+
 ```shell
 /tmp/${HOST0}
 └── kubeadmcfg.yaml
@@ -420,7 +426,8 @@ root@HOST $ mv pki /etc/kubernetes/
     └── server.key
 ```
 
-<b>etcd02</b>
+#### etcd02
+
 ```shell
 $HOME
 └── kubeadmcfg.yaml
@@ -438,7 +445,8 @@ $HOME
     └── server.key
 ```
 
-<b>etcd03</b>
+#### etcd03
+
 ```shell
 $HOME
 └── kubeadmcfg.yaml
@@ -458,22 +466,26 @@ $HOME
 
 ### Create Static Pod Manifests on each Etcd node
 
-<b>etcd01</b>
+#### etcd01
+
 ```shell
 sudo kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
 ```
 
-<b>etcd02</b>
+#### etcd02
+
 ```shell
 kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
 ```
 
-<b>etcd03</b>
+#### etcd03
+
 ```shell
 kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
 ```
 
 Once the kubeadm commands have completed, check the Cluster health (it may take a few minutes for the Etcd Cluster to become stable)
+
 ```shell
 docker run --rm -it \
 --net host \
@@ -488,6 +500,7 @@ docker run --rm -it \
 `${ETCD_TAG}` should be set to the version of etcd image
 
 Output should be similar to below
+
 ```shell
 member 238b72cdd26e304f is healthy: got healthy result from https://192.168.1.53:2379
 member 8034142cf01c5d1c is healthy: got healthy result from https://192.168.1.54:2379
@@ -499,7 +512,8 @@ cluster is healthy
 
 ### Copy Certificate and Key file from Etcd Node
 
-<b>etcd01</b>
+#### etcd01
+
 ```shell
 export CONTROL_PLANE="bens@192.168.1.50"
 scp /etc/kubernetes/pki/etcd/ca.crt "${CONTROL_PLANE}":
@@ -519,6 +533,7 @@ sudo cp /home/bens/apiserver-etcd-client.key /etc/kubernetes/pki/
 ```
 
 Create a file called `kubeadm-config.yaml`
+
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
@@ -542,17 +557,21 @@ networking:
 ```
 
 Initilise with `kubeadm`
+
 ```shell
 sudo kubeadm init --config kubeadm-config.yaml --upload-certs
 ```
 
 Provided all the above steps have been completed correctly, you'll see output similar to this:
+
 ```shell
 kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
 ```
+
 Copy the join output to a text file as it's needed for the master02.
 
 Allow a non-root user to run kubectl
+
 ```shell
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -560,12 +579,14 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 Now add a CNI (aka network) plugin. I use Weave as my CNI of choice, with secure communication
+
 ```shell
 kubectl create secret -n kube-system generic weave-passwd --from-literal=weave-passwd=$(hexdump -n 16 -e '4/4 "%08x" 1 "\n"' /dev/random)
 kubectl apply -n kube-system -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&password-secret=weave-passwd"
 ```
 
 Check for all the Pods to be deployed and in Running and the status of the cluster
+
 ```shell
 kubectl get pods -n kube-system -o wide
 
@@ -590,12 +611,14 @@ We can now add the second Master / Control Place (master02)
 
 Run the join command that was copied in the previous step to join master02 to the Kubernetes cluster
 
-<b>master02</b>
+#### master02
+
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
 ```
 
 Check for all the Pods to be deployed and in Running and the status of the cluster
+
 ```shell
 kubectl get pods -n kube-system -o wide
 
@@ -627,12 +650,14 @@ Let's add the 3rd and final Master / Control Plane node
 
 Run the join command again join master03 to the Kubernetes cluster
 
-<b>master03</b>
+#### master03
+
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
 ```
 
 Check for all the Pods to be deployed and in Running and the status of the cluster
+
 ```shell
 kubectl get pods -n kube-system -o wide
 
@@ -671,24 +696,28 @@ Next we'll configure the workers.
 
 Adding the additional worker nodes is simple.
 
-<b>worker01</b>
+#### worker01
+
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-<b>worker02</b>
+#### worker02
+
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-<b>worker03</b>
+#### worker03
+
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
 After a few minutes, the nodes will start to appear within the cluster
 
-<b>master01</b>
+#### master01
+
 ```shell
 kubectl get nodes -o wide
 
@@ -702,6 +731,7 @@ worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.60   <none>        Ubun
 ```
 
 ## 6. Redeploy CoreDNS Services
+
 Due to a bug/feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master/control plane or worker nodes), then it will deploy entirely on the same node (e.g. master01).
 
 ```shell
@@ -712,7 +742,8 @@ coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d16h   10.3
 
 To resolve this, we can restart the deployment of coredns, which will deploy across different nodes to provide the HA level of redundancy we've come to expect from Kubernetes.
 
-<b>master01</b>
+#### master01
+
 ```shell
 kubectl -n kube-system rollout restart deployment coredns
 ```
@@ -727,17 +758,21 @@ kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Run
 ## 6. Add MetalLB as an Internal Load Balancer
 
 Apply MetalLB deployment
-<b>master01</b>
+
+#### master01
+
 ```shell
 kubectl create -f metallb/metallb.yaml
 ```
 
 Next apply the MetalLB ConfigMap
+
 ```shell
 kubectl create -f metallb/metallb-configmap.yaml
 ```
 
 You can edit the ConfigMap after deployment by simply editing the configmap
+
 ```shell
 kubectl edit configmap config -n metallb-system
 ```
@@ -746,15 +781,18 @@ kubectl edit configmap config -n metallb-system
 
 To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
 
-<b>master01</b>
+#### master01
+
 ```shell
 kubectl create -f nfs-client/deploy/rbac.yaml
 kubectl create -f nfs-client/deploy/deployment.yaml
 kubectl create -f nfs-client/deploy/class.yaml
 ```
 
-<b>Optional</b>
+#### Optional
+
 You can set the NFS Storage Provisioner as the default storage class which will make things a bit simpler.
+
 ```shell
 kubectl patch deployment nfs-client-provisioner -p '{"spec":{"template":{"spec":{"serviceAccount":"nfs-client-provisioner"}}}}'
 kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
@@ -762,7 +800,8 @@ kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{
 
 ## 8. Helm
 
-<b>master01</b>
+#### master01
+
 ```shell
 kubectl create -f helm/helm-rbac.yaml
 kubectl create serviceaccount --namespace kube-system tiller
@@ -774,13 +813,15 @@ kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"templat
 
 Install the helm cli on the remaining Master / Control Plane nodes. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
 
-<b>master02</b>
+#### master02
+
 ```shell
 sudo snap install helm --classic
 helm init
 ```
 
-<b>master03</b>
+#### master03
+
 ```shell
 sudo snap install helm --classic
 helm init
@@ -789,6 +830,7 @@ helm init
 ## 9. Install Metric Server 
 
 We'll install the Metric Server for insights and as a pre-req to Horizontal Pod Scaling capabilities.
+
 ```shell
 kubectl create -f metric-server/aggregated-metrics-reader.yaml
 kubectl create -f metric-server/auth-delegator.yaml
@@ -805,6 +847,7 @@ kubectl create -f metric-server/resource-reader.yaml
 
 I've updated the Kubernetes Dashboard deployment to use a LoadBalancer (aka MetalLB) and include a admin-user Service Account.
 The standard Kubernetes Dashboard deployment will use a NodePort and you will need to create an admin-user Service Account.
+
 ```shell
 kubectl create -f dashboard/dashboard.yaml
 ```
@@ -814,6 +857,7 @@ kubectl create -f dashboard/dashboard.yaml
 Kubeadm (which we used to deploy this Kubernetes Cluster) does not support a Kube Config file for logging into the Kubernetes Dashboard. It only supports Token method.
 
 To get the Token to login, we need to run a command to print out that token.
+
 ```shell
 kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '{print $1}')
 ```
