@@ -13,9 +13,10 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
-Kubernetes Version: 1.16 
+Kubernetes Version: 1.16
 
 Network layout:
+
 * Virtual IP (for LoadBalancing) : 192.168.1.49
 * Master / Control Plane Node 01 (master01) : 192.168.1.50
 * Master / Control Plane Node 02 (master02) : 192.168.1.51
@@ -35,14 +36,16 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 
 On each HAProxy node, run the following:
 
-<b>proxy01</b>
+#### proxy01
+
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-<b>proxy02</b>
+#### proxy02
+
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 
@@ -116,7 +119,8 @@ Create `/etc/ha.d/ha.cf` on each HAProxy node
 
 They will differ slightly, as can be seen below
 
-<b>proxy01</b>
+**proxy01**
+
 ```shell
 #       keepalive: how many seconds between heartbeats
 #
@@ -146,7 +150,8 @@ node proxy01
 node proxy02
 ```
 
-<b>proxy02</b>
+**proxy02**
+
 ```shell
 #       keepalive: how many seconds between heartbeats
 #
@@ -185,9 +190,11 @@ Restart the heartbeat service on both HAProxy nodes
 ```shell
 sudo systemctl restart heartbeat
 ```
+
 ## 2. Kubernetes Configuration
 
 ### Configure Kubernetes & Docker Repositories on ALL Nodes
+
 ```shell
 sudo apt update && sudo apt install -y apt-transport-https curl ca-certificates software-properties-common
 ```
@@ -215,6 +222,7 @@ sudo apt update
 ```
 
 ### Disable Swap
+
 ```shell
 sudo swapoff -a
 
@@ -223,16 +231,19 @@ sudo sed -i '/ swap / s/^/#/' /etc/fstab
 The `/etc/fstab` file should now be commentted out for the swap mount point
 
 ### Install Docker packages
+
 ```shell
 sudo apt-get install docker-ce=18.06.2~ce~3-0~ubuntu
 ```
 
 ### Hold Docker Version
+
 ```shell
 sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu
 ```
 
 ### Modify Docker to use systemd driver and overlay2 storage driver
+
 ```shell
 cat > /etc/docker/daemon.json <<EOF
 {
@@ -247,21 +258,25 @@ EOF
 ```
 
 ### Restart docker
+
 ```shell
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
 ### Install Kubernetes Packages
+
 ```shell
 sudo apt install -y kubelet kubeadm kubectl
 ```
 
 ### Hold Kubernetes Packages
+
 ```shell
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
 ### Enable & Start Kubelet (if not already started)
+
 ```shell
 sudo systemctl enable kubelet && sudo systemctl start kubelet
 ```
@@ -269,6 +284,7 @@ sudo systemctl enable kubelet && sudo systemctl start kubelet
 ## 3. Etcd Cluster Configuration
 
 ### Create new etcd kubelet services configuration file
+
 On ALL Etcd Nodes, create a new kubelet systemd configuration file, with a higher precedence that the kubelet supplied version just installed
 ```shell
 cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
@@ -360,6 +376,7 @@ find /tmp/${HOST1} -name ca.key -type f -delete
 ```
 
 ### Copy kubeadm configuration and certificates files to the correct etcd node
+
 <b>etcd02</b>
 ```shell
 USER=bens
@@ -383,6 +400,7 @@ root@HOST $ mv pki /etc/kubernetes/
 ```
 
 ### Confirm that the full list of required files exist on each Etcd node
+
 <b>etcd01</b>
 ```shell
 /tmp/${HOST0}
@@ -439,6 +457,7 @@ $HOME
 ```
 
 ### Create Static Pod Manifests on each Etcd node
+
 <b>etcd01</b>
 ```shell
 sudo kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
@@ -649,6 +668,7 @@ Now all 3 Master / Control Plane nodes (master01 / master02 / master03) are conf
 Next we'll configure the workers.
 
 ## 5. Add Worker Nodes (worker01, worker02, worker03)
+
 Adding the additional worker nodes is simple.
 
 <b>worker01</b>
@@ -782,6 +802,7 @@ kubectl create -f metric-server/resource-reader.yaml
 ## 10. Kubernetes Dashboard
 
 ### Install the Kubernetes Dashboard
+
 I've updated the Kubernetes Dashboard deployment to use a LoadBalancer (aka MetalLB) and include a admin-user Service Account.
 The standard Kubernetes Dashboard deployment will use a NodePort and you will need to create an admin-user Service Account.
 ```shell
@@ -789,6 +810,7 @@ kubectl create -f dashboard/dashboard.yaml
 ```
 
 ### Kubernetes Dashboard Token
+
 Kubeadm (which we used to deploy this Kubernetes Cluster) does not support a Kube Config file for logging into the Kubernetes Dashboard. It only supports Token method.
 
 To get the Token to login, we need to run a command to print out that token.
@@ -797,16 +819,15 @@ kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboar
 ```
 
 ### Kubernetes Dashboard Example
+
 ```shell
 eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLXNtbTQyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3YjlkMzk4Ni1kYTQyLTQwMTUtOWI4ZC1mYjgzNzgxM2I1YTciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZXJuZXRlcy1kYXNoYm9hcmQ6YWRtaW4tdXNlciJ9.jjGAVDeJJBIXe7jzSbmC_azlT5MAnH3yemX81m9Bv9W_I5u2Nm9aezTPZyRnO46UN7Eb2piWH5fUeNCiVZylPQt-FI4L4BGLEl5RWJInckollrSRw2bhEBkdtmEdHWjqsKXNQLV2qbuTin6ZE4lpuMa0PbkCkX-wtdpf0ejnq_PIIEdkOAvrYOKzIO6LHAEkCtK4nFObwEGPUH1yDoIbGCbdlg_xbEx-6Uv7Xz8YfbZ3DBDljcL_tyk8LwmaUWmNryTNclWBXNPOKnqrfkx1DEdj6RXTrG9TIbaIJ8YW324PmYPkPt_MDGQNxDDwpWAgH7BsogOcb7XWRGuix16_pQ
 ```
 
 ### Get Kubernetes Dashboard ExternalIP from MetalLB
+
 ```shell
 kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 ```
 
 Connect via https://<b>ExternalIP</b>
-
-
-
