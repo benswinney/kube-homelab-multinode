@@ -1,10 +1,10 @@
 # homelab-multinode
 
-Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 10 nodes (VM's) with the following minimum requirements as below:
+Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 11 nodes (VM's) with the following minimum requirements as below:
 
 | Total | Role | CPU | RAM | HDD |
 |-------|------|-----|-----|-----|
-| 2     | master / control plane | 2 | 4Gb | 50Gb |
+| 3     | master / control plane | 2 | 4Gb | 50Gb |
 | 3     | etcd | 2   | 3Gb | 32Gb |
 | 2     | haproxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
@@ -19,16 +19,17 @@ Network layout:
 * Virtual IP (for LoadBalancing) : 192.168.1.49
 * Master / Control Plane Node 01 (master01) : 192.168.1.50
 * Master / Control Plane Node 02 (master02) : 192.168.1.51
-* Etcd Node 01 (etcd01) : 192.168.1.52
-* Etcd Node 02 (etcd02) : 192.168.1.53
-* Etcd Node 03 (etcd03) : 192.168.1.54
-* HAProxy Node 01 (proxy01) : 192.168.1.55
-* HAProxy Node 02 (proxy02) : 192.168.1.56
-* Worker Node 01 (worker01) : 192.168.1.57
-* Worker Node 02 (worker02) : 192.168.1.58
-* Worker Node 03 (worker03) : 192.168.1.59
+* Master / Control Plane Node 03 (master03) : 192.168.1.52
+* Etcd Node 01 (etcd01) : 192.168.1.53
+* Etcd Node 02 (etcd02) : 192.168.1.54
+* Etcd Node 03 (etcd03) : 192.168.1.55
+* HAProxy Node 01 (proxy01) : 192.168.1.56
+* HAProxy Node 02 (proxy02) : 192.168.1.57
+* Worker Node 01 (worker01) : 192.168.1.58
+* Worker Node 02 (worker02) : 192.168.1.59
+* Worker Node 03 (worker03) : 192.168.1.60
 
-If you're short on resources, proxy01/02 could be combined with etcd01/02
+If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master / Control Plane nodes
 
 ## 1. Configure HAProxy and Heartbeat
 
@@ -77,8 +78,9 @@ backend kubernetes-master-nodes
     mode tcp
     balance roundrobin
     option tcp-check
-    server k8s-master-0 192.168.1.50:6443 check fall 3 rise 2
-    server k8s-master-1 192.168.1.51:6443 check fall 3 rise 2
+    server kube-master-0 192.168.1.50:6443 check fall 3 rise 2
+    server kube-master-1 192.168.1.51:6443 check fall 3 rise 2
+    server kube-master-2 192.168.1.52:6443 check fall 3 rise 2
 ```
 
 Enable and Start HAProxy & Heartbeat
@@ -129,7 +131,7 @@ deadtime 10
 udpport 694
 bcast en0
 mcast en0 225.255.255.0 694 1 0
-ucast en0 192.168.1.55
+ucast en0 192.168.1.56
 #
 #       What interfaces to heartbeat over?
 udp en0
@@ -159,7 +161,7 @@ deadtime 10
 udpport 694
 bcast en0
 mcast en0 225.255.255.0 694 1 0
-ucast en0 192.168.1.56
+ucast en0 192.168.1.57
 #
 #       What interfaces to heartbeat over?
 udp en0
@@ -286,9 +288,9 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 
 <b>etcd01</b>
 ```shell
-export HOST0=192.168.1.52 # etcd01
-export HOST1=192.168.1.53 # etcd02
-export HOST2=192.168.1.54 # etcd03
+export HOST0=192.168.1.53 # etcd01
+export HOST1=192.168.1.54 # etcd02
+export HOST2=192.168.1.55 # etcd03
 
 mkdir -p /tmp/${HOST0}/ /tmp/${HOST1}/ /tmp/${HOST2}/
 
@@ -468,9 +470,9 @@ docker run --rm -it \
 
 Output should be similar to below
 ```shell
-member 238b72cdd26e304f is healthy: got healthy result from https://192.168.1.52:2379
-member 8034142cf01c5d1c is healthy: got healthy result from https://192.168.1.53:2379
-member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.54:2379
+member 238b72cdd26e304f is healthy: got healthy result from https://192.168.1.53:2379
+member 8034142cf01c5d1c is healthy: got healthy result from https://192.168.1.54:2379
+member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.55:2379
 cluster is healthy
 ```
 
@@ -509,9 +511,9 @@ controlPlaneEndpoint: "192.168.1.49:6443"
 etcd:
     external:
         endpoints:
-        - https://192.168.1.52:2379
         - https://192.168.1.53:2379
         - https://192.168.1.54:2379
+        - https://192.168.1.55:2379
         caFile: /etc/kubernetes/pki/etcd/ca.crt
         certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
         keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
@@ -565,7 +567,7 @@ master01   Ready    master   2d16h   v1.16.0   192.168.1.50   <none>        Ubun
 
 We can now add the second Master / Control Place (master02)
 
-### Configure second Master / Control Plane Node (master02)
+### Configure the second Master / Control Plane Node (master02)
 
 Run the join command that was copied in the previous step to join master02 to the Kubernetes cluster
 
@@ -600,7 +602,49 @@ master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubun
 
 ```
 
-Now both Master / Control Plane nodes (master01 / master02) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02). 
+Let's add the 3rd and final Master / Control Plane node
+
+### Configure the third Master / Control Plane Node (master03)
+
+Run the join command again join master03 to the Kubernetes cluster
+
+<b>master03</b>
+```shell
+sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
+```
+
+Check for all the Pods to be deployed and in Running and the status of the cluster
+```shell
+kubectl get pods -n kube-system -o wide
+
+NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
+coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      master01   <none>           <none>
+coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      master01   <none>           <none>
+kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-apiserver-kubemaster03            1/1     Running   1          2d18h   192.168.1.52   master02   <none>           <none>
+kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
+kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-controller-manager-kubemaster03   1/1     Running   1          2d18h   192.168.1.51   master03   <none>           <none>
+kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-proxy-g45jt                       1/1     Running   1          2d18h   192.168.1.52   master03   <none>           <none>
+kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-scheduler-kubemaster03            1/1     Running   1          2d18h   192.168.1.52   master03   <none>           <none>
+weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   master01   <none>           <none>
+weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   master02   <none>           <none>
+weave-net-r56jk                        2/2     Running   2          2d18h   192.168.1.52   master03   <none>           <none>
+
+kubectl get nodes -o wide
+
+NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+master01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master03   Ready    master   2d18h   v1.16.0   192.168.1.52   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+```
+
+Now all 3 Master / Control Plane nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02). 
 
 Next we'll configure the workers.
 
@@ -631,9 +675,10 @@ kubectl get nodes -o wide
 NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 master01   Ready    master   2d19h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 master02   Ready    master   2d19h   v1.16.0   192.168.1.51   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
-worker01   Ready    <none>   2d19h   v1.16.0   192.168.1.55   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
-worker02   Ready    <none>   2d19h   v1.16.0   192.168.1.56   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
-worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.57   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+master03   Ready    master   2d19h   v1.16.0   192.168.1.52   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker01   Ready    <none>   2d19h   v1.16.0   192.168.1.58   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker02   Ready    <none>   2d19h   v1.16.0   192.168.1.59   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
+worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.60   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
 ## 6. Redeploy CoreDNS Services
@@ -707,9 +752,15 @@ helm init --upgrade
 kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
 ```
 
-Install the helm cli on the second Master / Control Plane node. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
+Install the helm cli on the remaining Master / Control Plane nodes. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
 
 <b>master02</b>
+```shell
+sudo snap install helm --classic
+helm init
+```
+
+<b>master03</b>
 ```shell
 sudo snap install helm --classic
 helm init
