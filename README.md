@@ -44,7 +44,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-#### proxy02
+### proxy02
 
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
@@ -53,11 +53,13 @@ sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
 Add the below line to the `/etc/systctl.conf` file on each HAProxy node
+
 ```shell
 net.ipv4.ip_nonlocal_bind=1
 ```
 
 Create a new `/etc/haproxy/haproxy.cfg` on each HAProxy node:
+
 ```shell
 global
     user haproxy
@@ -87,6 +89,7 @@ backend kubernetes-master-nodes
 ```
 
 Enable and Start HAProxy & Heartbeat
+
 ```shell
 *proxy01* sudo systemctl enable haproxy && sudo systemctl start haproxy
 *proxy01* sudo systemctl enable heartbeat && sudo systemctl start heartbeat
@@ -97,6 +100,7 @@ Enable and Start HAProxy & Heartbeat
 REBOOT each HAProxy node
 
 Upon a successful reboot, check to see the that haproxy has started and is listening on the 192.168.1.49 address
+
 ```shell
 netstat -ntulp
 ```
@@ -104,12 +108,14 @@ netstat -ntulp
 Create authkeys `/etc/ha.d/authkeys` on both HAProxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
 
 Firstly generate a md5sum password
+
 ```shell
 echo -n somepassword | md5sum
 9c42a1346e333a770904b2a2b37fa7d3
 ```
 
 Then add to the `/etc/ha.d/authkeys` file
+
 ```shell
 auth 1
 1 md5 9c42a1346e333a770904b2a2b37fa7d3
@@ -182,11 +188,13 @@ node proxy02
 ```
 
 Create a `/etc/ha.d/haresources` on both HAProxy nodes
+
 ```shell
 proxy01 192.168.1.49
 ```
 
 Restart the heartbeat service on both HAProxy nodes
+
 ```shell
 sudo systemctl restart heartbeat
 ```
@@ -228,6 +236,7 @@ sudo swapoff -a
 
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
 ```
+
 The `/etc/fstab` file should now be commentted out for the swap mount point
 
 ### Install Docker packages
@@ -286,6 +295,7 @@ sudo systemctl enable kubelet && sudo systemctl start kubelet
 ### Create new etcd kubelet services configuration file
 
 On ALL Etcd Nodes, create a new kubelet systemd configuration file, with a higher precedence that the kubelet supplied version just installed
+
 ```shell
 cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
 [Service]
@@ -296,6 +306,7 @@ EOF
 ```
 
 Reload and Restart Kubelet on each of the Etcd Nodes
+
 ```shell
 sudo systemctl daemon-reload && sudo systemctl restart kubelet
 ```
@@ -351,6 +362,7 @@ This creates two files
 `/etc/kubernetes/pki/etcd/ca.key`
 
 Create certificates for each Etcd node (etcd01, etcd02, etcd03)
+
 ```shell
 kubeadm init phase certs etcd-server --config=/tmp/${HOST2}/kubeadmcfg.yaml
 kubeadm init phase certs etcd-peer --config=/tmp/${HOST2}/kubeadmcfg.yaml
@@ -508,7 +520,7 @@ member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.55
 cluster is healthy
 ```
 
-## 4. Configure HA Master (aka Control Plane) Nodes 
+## 4. Configure HA Master (aka Control Plane) Nodes
 
 ### Copy Certificate and Key file from Etcd Node
 
@@ -526,7 +538,7 @@ scp /etc/kubernetes/pki/apiserver-etcd-client.key "${CONTROL_PLANE}":
 First we need to move the certificates and key files we copied from the etcd01 node to the correct location (`/etc/kubernetes/pki/etcd`)
 
 ```shell
-sudo mkdir -p /etc/kubernetes/pki/etcd/ 
+sudo mkdir -p /etc/kubernetes/pki/etcd/
 sudo cp /home/bens/ca.crt /etc/kubernetes/pki/etcd/
 sudo cp /home/bens/apiserver-etcd-client.crt /etc/kubernetes/pki/
 sudo cp /home/bens/apiserver-etcd-client.key /etc/kubernetes/pki/
@@ -537,7 +549,7 @@ Create a file called `kubeadm-config.yaml`
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: v1.16.0 
+kubernetesVersion: v1.16.0
 apiServer:
   certSANs:
   - "192.168.1.49"
@@ -688,7 +700,7 @@ master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubun
 master03   Ready    master   2d18h   v1.16.0   192.168.1.52   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
-Now all 3 Master / Control Plane nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02). 
+Now all 3 Master / Control Plane nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02).
 
 Next we'll configure the workers.
 
@@ -696,19 +708,19 @@ Next we'll configure the workers.
 
 Adding the additional worker nodes is simple.
 
-#### worker01
+### worker01
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-#### worker02
+### worker02
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-#### worker03
+### worker03
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
@@ -716,7 +728,7 @@ sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-
 
 After a few minutes, the nodes will start to appear within the cluster
 
-#### master01
+### master01
 
 ```shell
 kubectl get nodes -o wide
@@ -742,7 +754,7 @@ coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d16h   10.3
 
 To resolve this, we can restart the deployment of coredns, which will deploy across different nodes to provide the HA level of redundancy we've come to expect from Kubernetes.
 
-#### master01
+### master01
 
 ```shell
 kubectl -n kube-system rollout restart deployment coredns
@@ -759,7 +771,7 @@ kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Run
 
 Apply MetalLB deployment
 
-#### master01
+### master01
 
 ```shell
 kubectl create -f metallb/metallb.yaml
@@ -781,7 +793,7 @@ kubectl edit configmap config -n metallb-system
 
 To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
 
-#### master01
+### master01
 
 ```shell
 kubectl create -f nfs-client/deploy/rbac.yaml
@@ -789,7 +801,7 @@ kubectl create -f nfs-client/deploy/deployment.yaml
 kubectl create -f nfs-client/deploy/class.yaml
 ```
 
-#### Optional
+### Optional
 
 You can set the NFS Storage Provisioner as the default storage class which will make things a bit simpler.
 
@@ -800,7 +812,7 @@ kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{
 
 ## 8. Helm
 
-#### master01
+### master01
 
 ```shell
 kubectl create -f helm/helm-rbac.yaml
@@ -813,21 +825,21 @@ kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"templat
 
 Install the helm cli on the remaining Master / Control Plane nodes. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
 
-#### master02
+### master02
 
 ```shell
 sudo snap install helm --classic
 helm init
 ```
 
-#### master03
+### master03
 
 ```shell
 sudo snap install helm --classic
 helm init
 ```
 
-## 9. Install Metric Server 
+## 9. Install Metric Server
 
 We'll install the Metric Server for insights and as a pre-req to Horizontal Pod Scaling capabilities.
 
@@ -874,4 +886,4 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiw
 kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 ```
 
-Connect via https://<b>ExternalIP</b>
+Connect via <https://>**ExternalIP**
