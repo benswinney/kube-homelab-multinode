@@ -1,6 +1,6 @@
 # Build a Kubernetes Cluster with multiple nodes
 
-These instructions will help build up a Kuberneres Cluster without a Stacked Etcd configuration for use within my homelab.
+These instructions will help build up a Kuberneres Cluster with an external Etcd configuration for use within my homelab.
 
 Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 11 nodes (VM's) with the following minimum requirements as below:
 
@@ -34,33 +34,35 @@ Network layout:
 
 If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master / Control Plane nodes within a Stacked nodes configuration.
 
-## Differences between Stacked and Non-Stacked Nodes Configurations with Kubeadm
+## Differences between Stacked and External Etcd Nodes Configurations
 
 > TLDR -  
-> Stacked : All Master and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
-> Non-Stacked : Separate Nodes are used for Master and Etcd Services (A minimum of 6 nodes)
+> Stacked : All Master / Control Plane and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
+> External Etcd : Stacked Master / Control Plane services run on seperate nodes to the Etcd Services (A minimum of 6 nodes)
 
-### Stacked Master / Control Planes and Etcd nodes
+### Stacked Master / Control Plane and Etcd Topology
 
-A stacked HA cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the cluster formed by the nodes managed by kubeadm that run master / control plane components.
+A Stacked Master / Control Plane and Etcd cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the master / control plane nodes.
 
-Each master / control plane node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). It also creates a local etcd member and this etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
+Each master / control plane node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
 
-This topology couples the master / control planes and etcd members on the same node where they run. It is simpler to set up than a cluster with external etcd nodes, and simpler to manage for replication.
+This topology couples the master / control planes and Etcd members on the same node where they run. It is simpler to set up than a cluster with external Etcd nodes, and simpler to manage for replication.
 
-However, a stacked cluster runs into the risk of failed coupling. If one node goes down, both an etcd member and a master / control plane instance are lost, and redundancy is compromised. You can mitigate this risk by adding more master / control plane nodes.
+However, a Stacked Master / Control Plane and Etcd cluster runs into the risk of failed coupling. If one node goes down, both an Etcd member and a master / control plane instance are lost, and redundancy is compromised. You can help mitigate this risk by adding additional master / control plane nodes.
 
-A minimum of three stacked master / control plane nodes should be used for an HA cluster.
+A minimum of three nodes should be used for a Stacked Master / Control Plane and Etcd cluster.
 
-### Stacked Master / Control Planes and external Etcd nodes
+### External Etcd with Stacked Master / Control Plane Topology
 
-An HA cluster with external etcd nodes is a topology where the distributed database (*Source of all truth*) provided by etcd is external to the cluster formed by the nodes that run master / control plane components.
+An External Etcd with Stacked Master / Control Plane cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is external to the cluster formed by the master / control plane nodes.
 
-Like in the stacked etcd topology, each master / control plane node in an external etcd topology runs an instance of the api-server, scheduler, and controller-manager. And the api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy). However, etcd members run on separate hosts, and each etcd host communicates with the api-server of each master / control plane node.
+Similar to a Stacked Master / Control Plane and Etcd topology, each master / control plane node in an External Etcd with Stacked Master / Control Plane cluster runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy).
 
-This topology decouples the master / control plane and etcd member. It therefore provides an HA setup where losing a master / control plane instance or an etcd member has less impact and does not affect the cluster redundancy as much as the stacked HA topology.
+Unlike a Stacked Master / Control Plane and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the api-server of each master / control plane node.
 
-However, this topology requires twice the number of hosts as the stacked HA topology. A minimum of three hosts for master / control plane nodes and three hosts for etcd nodes are required for an HA cluster with this topology.
+This topology decouples the master / control plane and Etcd member. It therefore provides a setup where losing a master / control plane instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master / Control Plane and Etcd topology.
+
+However, this topology requires twice the number of nodes as the Stacked Master / Control Plane and Etcd topology. A minimum of three nodes for master / control plane and three nodes for Etcd are required for a cluster with this topology.
 
 ## 1. Create Load Balancer for Kubernetes API-Server
 
