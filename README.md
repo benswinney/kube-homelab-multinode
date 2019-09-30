@@ -1,4 +1,4 @@
-# homelab-multinode
+# Build a Kubernetes Cluster with multiple nodes for use within a homelab
 
 These instructions will help build up a Kuberneres Cluster without a Stacked Etcd configuration.
 
@@ -11,7 +11,7 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 | 2     | proxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-* These nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
+* The Proxy nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
