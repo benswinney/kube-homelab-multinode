@@ -1,5 +1,7 @@
 # homelab-multinode
 
+These instructions will help build up a Kuberneres Cluster without a Stacked Etcd configuration.
+
 Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 11 nodes (VM's) with the following minimum requirements as below:
 
 | Total | Role | CPU | RAM | HDD |
@@ -890,4 +892,56 @@ Connect via <https://>**ExternalIP**
 
 ## 10. Ingress Controller (nginx)
 
-Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer. Putting an ingress controller in front of our applications gives benefits like fine controlled access, TLS termination, get some performance statistics etc.
+Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer.
+
+Putting an ingress controller in front of our applications provides benefits like basic load balancing, SSL/TLS termination, support for URI rewrites, and upstream SSL/TLS encryption.
+
+### master01
+
+Apply the mandatory Nginx Ingress Controller Yaml file.
+
+```shell
+kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-mandatory.yaml
+```
+
+Alternatively, you can apply direct from the Kubernetes website:
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+```
+
+Now we need to create a Load Balancer Service type for the Nginx Ingress Controller.
+
+```shell
+kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-svc.yaml
+```
+
+Again, you could apply the Service Type directly from the Kubernetes website, however that Service type is configured for a NodePort Service type and you would need to edit the Service and change it to a LoadBalancer Service type to work with the MetalLB LoadBalancer configuration we've installed.
+
+```shell
+https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+```
+
+Remember to modify the Service Type after applying the configuration.
+
+Let's check what External IP address has been provided by MetalLB (take a note of it for later)
+
+```shell
+kubectl -n ingress-nginx get svc -n ingress-nginx
+```
+
+Once everything has been deployed, let's test to ensure everything is working as we expect. We can test by deploying a small Nginx web server application.
+
+Apply the Nginx web server deployment yaml file. 
+
+```shell
+kubectl apply -f nginx-ingress-controller/test-deployment/nginx-test-deployment.yaml
+```
+
+Then apply the Nginx web server ingress yaml file. This file will perform the re-write rules and route traffic to the correct paths.
+
+```shell
+kubectl apply -f nginx-ingress-controller/test-deployment/nginx-test-ingress.yaml
+```
+
+Test via <http://>External IP Address noted above.

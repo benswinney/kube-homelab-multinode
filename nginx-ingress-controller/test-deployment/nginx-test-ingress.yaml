@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-test-ingress
+  annotations: 
+     nginx.ingress.kubernetes.io/rewrite-target: /
+     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /test
+        backend:
+          serviceName: nginx-test
+          servicePort: 80
+---
