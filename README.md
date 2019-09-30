@@ -1,6 +1,6 @@
-# Build a Kubernetes Cluster with multiple nodes for use within a homelab
+# Build a Kubernetes Cluster with multiple nodes
 
-These instructions will help build up a Kuberneres Cluster without a Stacked Etcd configuration.
+These instructions will help build up a Kuberneres Cluster without a Stacked Etcd configuration for use within my homelab.
 
 Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 11 nodes (VM's) with the following minimum requirements as below:
 
