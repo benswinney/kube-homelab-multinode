@@ -67,7 +67,7 @@ However, this topology requires twice the number of hosts as the stacked HA topo
 
 On each Proxy node, run the following:
 
-### proxy01
+> proxy01
 
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
@@ -75,7 +75,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-### proxy02
+> proxy02
 
 ```shell
 sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
@@ -344,7 +344,7 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 
 ### Generate kubeadm configuration files for all Etcd nodes
 
-#### etcd01
+> etcd01
 
 ```shell
 export HOST0=192.168.1.53 # etcd01
@@ -382,7 +382,7 @@ done
 
 ### Generate the Certificate Authority
 
-#### etd01
+> etcd01
 
 ```shell
 sudo kubeadm init phase certs etcd-ca
@@ -423,7 +423,7 @@ find /tmp/${HOST1} -name ca.key -type f -delete
 
 ### Copy kubeadm configuration and certificates files to the correct etcd node
 
-#### etcd02
+> etcd02
 
 ```shell
 USER=bens
@@ -435,7 +435,7 @@ root@HOST $ chown -R root:root pki
 root@HOST $ mv pki /etc/kubernetes/
 ```
 
-#### etcd03
+> etcd03
 
 ```shell
 USER=bens
@@ -449,7 +449,7 @@ root@HOST $ mv pki /etc/kubernetes/
 
 ### Confirm that the full list of required files exist on each Etcd node
 
-#### etcd01
+> etcd01
 
 ```shell
 /tmp/${HOST0}
@@ -469,7 +469,7 @@ root@HOST $ mv pki /etc/kubernetes/
     └── server.key
 ```
 
-#### etcd02
+> etcd02
 
 ```shell
 $HOME
@@ -488,7 +488,7 @@ $HOME
     └── server.key
 ```
 
-#### etcd03
+> etcd03
 
 ```shell
 $HOME
@@ -509,19 +509,19 @@ $HOME
 
 ### Create Static Pod Manifests on each Etcd node
 
-#### etcd01
+> etcd01
 
 ```shell
 sudo kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
 ```
 
-#### etcd02
+> etcd02
 
 ```shell
 kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
 ```
 
-#### etcd03
+> etcd03
 
 ```shell
 kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
@@ -555,7 +555,7 @@ cluster is healthy
 
 ### Copy Certificate and Key file from Etcd Node
 
-#### etcd01
+> etcd01
 
 ```shell
 export CONTROL_PLANE="bens@192.168.1.50"
@@ -654,7 +654,7 @@ We can now add the second Master / Control Place (master02)
 
 Run the join command that was copied in the previous step to join master02 to the Kubernetes cluster
 
-#### master02
+> master02
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
@@ -693,7 +693,7 @@ Let's add the 3rd and final Master / Control Plane node
 
 Run the join command again join master03 to the Kubernetes cluster
 
-#### master03
+> master03
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
@@ -739,19 +739,19 @@ Next we'll configure the workers.
 
 Adding the additional worker nodes is simple.
 
-### worker01
+> worker01
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-### worker02
+> worker02
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
 ```
 
-### worker03
+> worker03
 
 ```shell
 sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f
@@ -759,7 +759,7 @@ sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-
 
 After a few minutes, the nodes will start to appear within the cluster
 
-### master01
+> master01
 
 ```shell
 kubectl get nodes -o wide
@@ -785,7 +785,7 @@ coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d16h   10.3
 
 To resolve this, we can restart the deployment of coredns, which will deploy across different nodes to provide the HA level of redundancy we've come to expect from Kubernetes.
 
-### master01
+> master01
 
 ```shell
 kubectl -n kube-system rollout restart deployment coredns
@@ -802,7 +802,7 @@ kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Run
 
 Apply MetalLB deployment
 
-### master01
+> master01
 
 ```shell
 kubectl create -f metallb/metallb.yaml
@@ -824,7 +824,7 @@ kubectl edit configmap config -n metallb-system
 
 To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
 
-### master01
+> master01
 
 ```shell
 kubectl create -f nfs-client/deploy/rbac.yaml
@@ -843,7 +843,7 @@ kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{
 
 ## 8. Helm
 
-### master01
+> master01
 
 ```shell
 kubectl create -f helm/helm-rbac.yaml
@@ -856,14 +856,14 @@ kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"templat
 
 Install the helm cli on the remaining Master / Control Plane nodes. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
 
-### master02
+> master02
 
 ```shell
 sudo snap install helm --classic
 helm init
 ```
 
-### master03
+> master03
 
 ```shell
 sudo snap install helm --classic
@@ -925,7 +925,7 @@ Realistically, we can skip an Ingress Contoller and expose our applications dire
 
 Putting an ingress controller in front of our applications provides benefits like basic load balancing, SSL/TLS termination, support for URI rewrites, and upstream SSL/TLS encryption.
 
-### master01
+> master01
 
 Apply the mandatory Nginx Ingress Controller Yaml file.
 
@@ -961,7 +961,7 @@ kubectl -n ingress-nginx get svc -n ingress-nginx
 
 Once everything has been deployed, let's test to ensure everything is working as we expect. We can test by deploying a small Nginx web server application.
 
-Apply the Nginx web server deployment yaml file. 
+Apply the Nginx web server deployment yaml file.
 
 ```shell
 kubectl apply -f nginx-ingress-controller/test-deployment/nginx-test-deployment.yaml
