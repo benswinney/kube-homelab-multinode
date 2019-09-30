@@ -8,10 +8,10 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 |-------|------|-----|-----|-----|
 | 3     | master / control plane | 2 | 4Gb | 50Gb |
 | 3     | etcd | 2   | 3Gb | 32Gb |
-| 2     | haproxy* | 2 | 2Gb | 20Gb |
+| 2     | proxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-* These nodes will be used to provide LoadBalancing for the masters / control planes
+* These nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
@@ -26,17 +26,46 @@ Network layout:
 * Etcd Node 01 (etcd01) : 192.168.1.53
 * Etcd Node 02 (etcd02) : 192.168.1.54
 * Etcd Node 03 (etcd03) : 192.168.1.55
-* HAProxy Node 01 (proxy01) : 192.168.1.56
-* HAProxy Node 02 (proxy02) : 192.168.1.57
+* Proxy Node 01 (proxy01) : 192.168.1.56
+* Proxy Node 02 (proxy02) : 192.168.1.57
 * Worker Node 01 (worker01) : 192.168.1.58
 * Worker Node 02 (worker02) : 192.168.1.59
 * Worker Node 03 (worker03) : 192.168.1.60
 
-If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master / Control Plane nodes
+If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master / Control Plane nodes within a Stacked nodes configuration.
 
-## 1. Configure HAProxy and Heartbeat
+## Differences between Stacked and Non-Stacked Nodes Configurations with Kubeadm
 
-On each HAProxy node, run the following:
+TLDR: Stacked = All Master and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
+      Non-Stacked = Separate Nodes are used for Master and Etcd Services (A minimum of 6 nodes)
+
+### Stacked Master / Control Planes and Etcd nodes
+
+A stacked HA cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the cluster formed by the nodes managed by kubeadm that run master / control plane components.
+
+Each master / control plane node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). It also creates a local etcd member and this etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
+
+This topology couples the master / control planes and etcd members on the same node where they run. It is simpler to set up than a cluster with external etcd nodes, and simpler to manage for replication.
+
+However, a stacked cluster runs into the risk of failed coupling. If one node goes down, both an etcd member and a master / control plane instance are lost, and redundancy is compromised. You can mitigate this risk by adding more master / control plane nodes.
+
+A minimum of three stacked master / control plane nodes should be used for an HA cluster.
+
+### Stacked Master / Control Planes and external Etcd nodes
+
+An HA cluster with external etcd nodes is a topology where the distributed database (*Source of all truth*) provided by etcd is external to the cluster formed by the nodes that run master / control plane components.
+
+Like in the stacked etcd topology, each master / control plane node in an external etcd topology runs an instance of the api-server, scheduler, and controller-manager. And the api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy). However, etcd members run on separate hosts, and each etcd host communicates with the api-server of each master / control plane node.
+
+This topology decouples the master / control plane and etcd member. It therefore provides an HA setup where losing a master / control plane instance or an etcd member has less impact and does not affect the cluster redundancy as much as the stacked HA topology.
+
+However, this topology requires twice the number of hosts as the stacked HA topology. A minimum of three hosts for master / control plane nodes and three hosts for etcd nodes are required for an HA cluster with this topology.
+
+## 1. Create Load Balancer for Kubernetes API-Server
+
+### Configure HAProxy and Heartbeat
+
+On each Proxy node, run the following:
 
 ### proxy01
 
@@ -54,13 +83,13 @@ sudo apt update && sudo apt upgrade -y && sudo apt install haproxy heartbeat -y
 sudo mv /etc/haproxy/haproxy.cfg{,.bkp}
 ```
 
-Add the below line to the `/etc/systctl.conf` file on each HAProxy node
+Add the below line to the `/etc/systctl.conf` file on each Proxy node
 
 ```shell
 net.ipv4.ip_nonlocal_bind=1
 ```
 
-Create a new `/etc/haproxy/haproxy.cfg` on each HAProxy node:
+Create a new `/etc/haproxy/haproxy.cfg` on each Proxy node:
 
 ```shell
 global
@@ -99,7 +128,7 @@ Enable and Start HAProxy & Heartbeat
 *proxy02* sudo systemctl enable heartbeat && sudo sytemtctl start heartbeat
 ```
 
-REBOOT each HAProxy node
+REBOOT each Proxy node
 
 Upon a successful reboot, check to see the that haproxy has started and is listening on the 192.168.1.49 address
 
@@ -107,7 +136,7 @@ Upon a successful reboot, check to see the that haproxy has started and is liste
 netstat -ntulp
 ```
 
-Create authkeys `/etc/ha.d/authkeys` on both HAProxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
+Create authkeys `/etc/ha.d/authkeys` on both Proxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
 
 Firstly generate a md5sum password
 
@@ -123,11 +152,11 @@ auth 1
 1 md5 9c42a1346e333a770904b2a2b37fa7d3
 ```
 
-Create `/etc/ha.d/ha.cf` on each HAProxy node
+Create `/etc/ha.d/ha.cf` on each Proxy node
 
 They will differ slightly, as can be seen below
 
-#### proxy01
+> proxy01
 
 ```shell
 #       keepalive: how many seconds between heartbeats
@@ -158,7 +187,7 @@ node proxy01
 node proxy02
 ```
 
-#### proxy02
+> proxy02
 
 ```shell
 #       keepalive: how many seconds between heartbeats
@@ -189,13 +218,13 @@ node proxy01
 node proxy02
 ```
 
-Create a `/etc/ha.d/haresources` on both HAProxy nodes
+Create a `/etc/ha.d/haresources` file on both Proxy nodes
 
 ```shell
 proxy01 192.168.1.49
 ```
 
-Restart the heartbeat service on both HAProxy nodes
+Restart the heartbeat service on both Proxy nodes
 
 ```shell
 sudo systemctl restart heartbeat
