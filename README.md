@@ -887,3 +887,7 @@ kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 ```
 
 Connect via <https://>**ExternalIP**
+
+## 10. Ingress Controller (nginx)
+
+Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer. Putting an ingress controller in front of our applications gives benefits like fine controlled access, TLS termination, get some performance statistics etc.
