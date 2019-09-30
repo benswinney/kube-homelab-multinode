@@ -36,8 +36,9 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 
 ## Differences between Stacked and Non-Stacked Nodes Configurations with Kubeadm
 
-TLDR: Stacked = All Master and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
-      Non-Stacked = Separate Nodes are used for Master and Etcd Services (A minimum of 6 nodes)
+> TLDR -  
+> Stacked : All Master and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
+> Non-Stacked : Separate Nodes are used for Master and Etcd Services (A minimum of 6 nodes)
 
 ### Stacked Master / Control Planes and Etcd nodes
 
