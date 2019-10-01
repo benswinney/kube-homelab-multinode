@@ -39,8 +39,8 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 ## Differences between Stacked Master and External Etcd Nodes Configurations
 
 > TLDR  
-`Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)`  
-`External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)`
+> Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)  
+> External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)
 
 ### Stacked Master and Etcd Topology
 
@@ -54,7 +54,7 @@ However, a Stacked Master and Etcd cluster runs into the risk of failed coupling
 
 A minimum of three nodes should be used for a Stacked Master and Etcd cluster.
 
-This is the default topology in kubeadm. A local etcd member is created automatically on control plane nodes when using kubeadm init and kubeadm join --control-plane.
+This is the default topology in `kubeadm`. A local etcd member is created automatically on master nodes when using `kubeadm init` and `kubeadm join --control-plane`.
 
 ### External Etcd with Stacked Master Topology
 
@@ -780,7 +780,7 @@ worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.60   <none>        Ubun
 
 ## 6. Redeploy CoreDNS Services
 
-Due to a bug/feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master or worker nodes), then it will deploy entirely on the same node (e.g. master01).
+Due to a bug / feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master or worker nodes), then it will deploy entirely on the same node (e.g. master01).
 
 ```shell
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
