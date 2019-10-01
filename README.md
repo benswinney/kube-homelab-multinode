@@ -58,7 +58,7 @@ This is the default topology in `kubeadm`. A local etcd member is created automa
 
 ### External Etcd with Stacked Master Topology
 
-![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/docs/external-etcd.png)
+![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/external-etcd.png)
 
 An External Etcd with Stacked Master cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is external to the cluster formed by the master nodes.
 
