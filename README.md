@@ -803,7 +803,13 @@ kube-system            coredns-58ddcb86c5-cxlnl                      1/1     Run
 kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Running   0          12m     10.36.0.5      worker01   <none>           <none>
 ```
 
-## 6. Add MetalLB as an Internal Load Balancer
+## 7. Enable DNS Auto-scaling
+
+```shell
+kubectl apply -f dns-autoscaling/dns-horizontal-autoscaling-deployment.yaml
+```
+
+## 8. Add MetalLB as an Internal Load Balancer
 
 Apply MetalLB deployment
 
@@ -825,7 +831,7 @@ You can edit the ConfigMap after deployment by simply editing the configmap
 kubectl edit configmap config -n metallb-system
 ```
 
-## 7. Install NFS Storage Provisioner
+## 9. Install NFS Storage Provisioner
 
 To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
 
@@ -846,7 +852,7 @@ kubectl patch deployment nfs-client-provisioner -p '{"spec":{"template":{"spec":
 kubectl patch storageclass managed-nfs-storage -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ```
 
-## 8. Helm
+## 10. Helm
 
 > master01
 
@@ -875,7 +881,7 @@ sudo snap install helm --classic
 helm init
 ```
 
-## 9. Install Metric Server
+## 11. Install Metric Server
 
 We'll install the Metric Server for insights and as a pre-req to Horizontal Pod Scaling capabilities.
 
@@ -889,7 +895,7 @@ kubectl create -f metric-server/metrics-server-service.yaml
 kubectl create -f metric-server/resource-reader.yaml
 ```
 
-## 10. Kubernetes Dashboard
+## 12. Kubernetes Dashboard
 
 ### Install the Kubernetes Dashboard
 
@@ -925,7 +931,7 @@ kubectl --namespace kubernetes-dashboard get service kubernetes-dashboard
 
 Connect via <https://>**ExternalIP**
 
-## 10. Ingress Controller (nginx)
+## 13. Ingress Controller (nginx)
 
 Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer.
 
