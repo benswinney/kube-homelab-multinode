@@ -58,6 +58,8 @@ This is the default topology in `kubeadm`. A local etcd member is created automa
 
 ### External Etcd with Stacked Master Topology
 
+![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/docs/external-etcd.png)
+
 An External Etcd with Stacked Master cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is external to the cluster formed by the master nodes.
 
 Similar to a Stacked Master and Etcd topology, each master node in an External Etcd with Stacked Master cluster runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes by using a load balancer (e.g. HAProxy).
