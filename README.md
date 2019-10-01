@@ -38,8 +38,9 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 
 ## Differences between Stacked Master and External Etcd Nodes Configurations
 
-`TLDR - Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)
-External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)`
+> TLDR
+`Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)`
+`External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)`
 
 ### Stacked Master and Etcd Topology
 
