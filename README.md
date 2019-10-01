@@ -11,7 +11,9 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 | 2     | proxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-* The Proxy nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
+\* The Proxy nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
+
+* Under Kubernetes, Master nodes and Control Planes nodes are one of the same thing. Some people refer to them as Master nodes and others a Control Plane nodes. For sake of simplicity, I'll refer to these nodes as Master nodes going forward for the purpose of this document.
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
@@ -20,9 +22,9 @@ Kubernetes Version: 1.16
 Network layout:
 
 * Virtual IP (for LoadBalancing) : 192.168.1.49
-* Master / Control Plane Node 01 (master01) : 192.168.1.50
-* Master / Control Plane Node 02 (master02) : 192.168.1.51
-* Master / Control Plane Node 03 (master03) : 192.168.1.52
+* Master Node 01 (master01) : 192.168.1.50
+* Master Node 02 (master02) : 192.168.1.51
+* Master Node 03 (master03) : 192.168.1.52
 * Etcd Node 01 (etcd01) : 192.168.1.53
 * Etcd Node 02 (etcd02) : 192.168.1.54
 * Etcd Node 03 (etcd03) : 192.168.1.55
@@ -32,37 +34,37 @@ Network layout:
 * Worker Node 02 (worker02) : 192.168.1.59
 * Worker Node 03 (worker03) : 192.168.1.60
 
-If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master / Control Plane nodes within a Stacked nodes configuration.
+If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master nodes within a Stacked nodes configuration.
 
 ## Differences between Stacked and External Etcd Nodes Configurations
 
 > TLDR -  
-> Stacked : All Master / Control Plane and Etcd Services are ran on the same node, but HA provided by multiple Master / Control Plane nodes (A minimum of 3 nodes)
-> External Etcd : Stacked Master / Control Plane services run on seperate nodes to the Etcd Services (A minimum of 6 nodes)
+> Stacked : All Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)
+> External Etcd : Stacked Master services run on seperate nodes to the Etcd Services (A minimum of 6 nodes)
 
-### Stacked Master / Control Plane and Etcd Topology
+### Stacked Master and Etcd Topology
 
-A Stacked Master / Control Plane and Etcd cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the master / control plane nodes.
+A Stacked Master and Etcd cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the master nodes.
 
-Each master / control plane node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
+Each master node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
 
-This topology couples the master / control planes and Etcd members on the same node where they run. It is simpler to set up than a cluster with external Etcd nodes, and simpler to manage for replication.
+This topology couples the master and Etcd members on the same node where they run. It is simpler to set up than a cluster with external Etcd nodes, and simpler to manage for replication.
 
-However, a Stacked Master / Control Plane and Etcd cluster runs into the risk of failed coupling. If one node goes down, both an Etcd member and a master / control plane instance are lost, and redundancy is compromised. You can help mitigate this risk by adding additional master / control plane nodes.
+However, a Stacked Master and Etcd cluster runs into the risk of failed coupling. If one node goes down, both an Etcd member and a master instance are lost, and redundancy is compromised. You can help mitigate this risk by adding additional master nodes.
 
-A minimum of three nodes should be used for a Stacked Master / Control Plane and Etcd cluster.
+A minimum of three nodes should be used for a Stacked Master and Etcd cluster.
 
-### External Etcd with Stacked Master / Control Plane Topology
+### External Etcd with Stacked Master Topology
 
-An External Etcd with Stacked Master / Control Plane cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is external to the cluster formed by the master / control plane nodes.
+An External Etcd with Stacked Master cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is external to the cluster formed by the master / control plane nodes.
 
-Similar to a Stacked Master / Control Plane and Etcd topology, each master / control plane node in an External Etcd with Stacked Master / Control Plane cluster runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy).
+Similar to a Stacked Master and Etcd topology, each master node in an External Etcd with Stacked Master cluster runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy).
 
-Unlike a Stacked Master / Control Plane and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the api-server of each master / control plane node.
+Unlike a Stacked Master and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the api-server of each master node.
 
-This topology decouples the master / control plane and Etcd member. It therefore provides a setup where losing a master / control plane instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master / Control Plane and Etcd topology.
+This topology decouples the master and Etcd member. It therefore provides a setup where losing a master / control plane instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master and Etcd topology.
 
-However, this topology requires twice the number of nodes as the Stacked Master / Control Plane and Etcd topology. A minimum of three nodes for master / control plane and three nodes for Etcd are required for a cluster with this topology.
+However, this topology requires twice the number of nodes as the Stacked Master and Etcd topology. A minimum of three nodes for master and three nodes for Etcd are required for a cluster with this topology.
 
 ## 1. Create Load Balancer for Kubernetes API-Server
 
@@ -122,13 +124,11 @@ backend kubernetes-master-nodes
     server kube-master-2 192.168.1.52:6443 check fall 3 rise 2
 ```
 
-Enable and Start HAProxy & Heartbeat
+Enable and Start HAProxy & Heartbeat on both Proxy nodes
 
 ```shell
-*proxy01* sudo systemctl enable haproxy && sudo systemctl start haproxy
-*proxy01* sudo systemctl enable heartbeat && sudo systemctl start heartbeat
-*proxy02* sudo systemctl enable haproxy && sudo systemctl start haproxy
-*proxy02* sudo systemctl enable heartbeat && sudo sytemtctl start heartbeat
+sudo systemctl enable haproxy && sudo systemctl start haproxy
+sudo systemctl enable heartbeat && sudo systemctl start heartbeat
 ```
 
 REBOOT each Proxy node
@@ -136,10 +136,10 @@ REBOOT each Proxy node
 Upon a successful reboot, check to see the that haproxy has started and is listening on the 192.168.1.49 address
 
 ```shell
-netstat -ntulp
+sudo netstat -ntulp
 ```
 
-Create authkeys `/etc/ha.d/authkeys` on both Proxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
+Create a authkeys `/etc/ha.d/authkeys` file on both Proxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
 
 Firstly generate a md5sum password
 
@@ -554,7 +554,7 @@ member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.55
 cluster is healthy
 ```
 
-## 4. Configure HA Master (aka Control Plane) Nodes
+## 4. Configure the Master Nodes
 
 ### Copy Certificate and Key file from Etcd Node
 
@@ -567,7 +567,7 @@ scp /etc/kubernetes/pki/apiserver-etcd-client.crt "${CONTROL_PLANE}":
 scp /etc/kubernetes/pki/apiserver-etcd-client.key "${CONTROL_PLANE}":
 ```
 
-### Configure first Master / Control Plane Node (master01)
+### Configure first Master Node (master01)
 
 First we need to move the certificates and key files we copied from the etcd01 node to the correct location (`/etc/kubernetes/pki/etcd`)
 
@@ -651,9 +651,9 @@ NAME           STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   
 master01   Ready    master   2d16h   v1.16.0   192.168.1.50   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
-We can now add the second Master / Control Place (master02)
+We can now add the second Master (master02)
 
-### Configure the second Master / Control Plane Node (master02)
+### Configure the second Master Node (master02)
 
 Run the join command that was copied in the previous step to join master02 to the Kubernetes cluster
 
@@ -690,9 +690,9 @@ master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubun
 
 ```
 
-Let's add the 3rd and final Master / Control Plane node
+Let's add the 3rd and final Master node
 
-### Configure the third Master / Control Plane Node (master03)
+### Configure the third Master Node (master03)
 
 Run the join command again join master03 to the Kubernetes cluster
 
@@ -734,7 +734,7 @@ master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubun
 master03   Ready    master   2d18h   v1.16.0   192.168.1.52   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
-Now all 3 Master / Control Plane nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02).
+Now all 3 Master nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02).
 
 Next we'll configure the workers.
 
@@ -778,7 +778,7 @@ worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.60   <none>        Ubun
 
 ## 6. Redeploy CoreDNS Services
 
-Due to a bug/feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master/control plane or worker nodes), then it will deploy entirely on the same node (e.g. master01).
+Due to a bug/feature of kubeadm, if coredns is deployed without additional nodes available (e.g. another master or worker nodes), then it will deploy entirely on the same node (e.g. master01).
 
 ```shell
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
@@ -857,7 +857,7 @@ helm init --upgrade
 kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
 ```
 
-Install the helm cli on the remaining Master / Control Plane nodes. This allows us to interactive with Helm even if the first Master / Control Plane node is unavailable.
+Install the helm cli on the remaining Master nodes. This allows us to interactive with Helm even if the first Master node is unavailable.
 
 > master02
 
@@ -892,6 +892,7 @@ kubectl create -f metric-server/resource-reader.yaml
 ### Install the Kubernetes Dashboard
 
 I've updated the Kubernetes Dashboard deployment to use a LoadBalancer (aka MetalLB) and include a admin-user Service Account.
+
 The standard Kubernetes Dashboard deployment will use a NodePort and you will need to create an admin-user Service Account.
 
 ```shell
