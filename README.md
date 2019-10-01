@@ -6,14 +6,14 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 
 | Total | Role | CPU | RAM | HDD |
 |-------|------|-----|-----|-----|
-| 3     | master / control plane | 2 | 4Gb | 50Gb |
+| 3     | master / control-plane | 2 | 4Gb | 50Gb |
 | 3     | etcd | 2   | 3Gb | 32Gb |
 | 2     | proxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-\* The Proxy nodes will be used to provide LoadBalancing for the masters / control planes API-Server via HAProxy
+\* The Proxy nodes will be used to provide LoadBalancing for the masters / control-planes API-Server via HAProxy
 
-* Under Kubernetes, Master nodes and Control Planes nodes are one of the same thing. Some people refer to them as Master nodes and others a Control Plane nodes. For sake of simplicity, I'll refer to these nodes as Master nodes going forward for the purpose of this document.
+* Under Kubernetes, Master nodes and Control-Plane nodes are one of the same thing. Some people refer to them as Master nodes and others a Control-Plane nodes. For sake of simplicity, I'll refer to these nodes as Master nodes going forward for the purpose of this document.
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
@@ -36,17 +36,16 @@ Network layout:
 
 If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master nodes within a Stacked nodes configuration.
 
-## Differences between Stacked and External Etcd Nodes Configurations
+## Differences between Stacked Master and External Etcd Nodes Configurations
 
-> TLDR -  
-> Stacked : All Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)
-> External Etcd : Stacked Master services run on seperate nodes to the Etcd Services (A minimum of 6 nodes)
+`TLDR - Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)
+External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)`
 
 ### Stacked Master and Etcd Topology
 
-A Stacked Master and Etcd cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is stacked on top of the master nodes.
+A Stacked Master and Etcd cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is stacked on top of the master nodes.
 
-Each master node runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the api-server running on this same node. The same applies to the local controller-manager and scheduler instances.
+Each master node runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the `kube-apiserver` running on this same node. The same applies to the local `kube-controller-manager` and `kube-scheduler` instances.
 
 This topology couples the master and Etcd members on the same node where they run. It is simpler to set up than a cluster with external Etcd nodes, and simpler to manage for replication.
 
@@ -54,15 +53,17 @@ However, a Stacked Master and Etcd cluster runs into the risk of failed coupling
 
 A minimum of three nodes should be used for a Stacked Master and Etcd cluster.
 
+This is the default topology in kubeadm. A local etcd member is created automatically on control plane nodes when using kubeadm init and kubeadm join --control-plane.
+
 ### External Etcd with Stacked Master Topology
 
-An External Etcd with Stacked Master cluster is a topology where the distributed database (*Source of all truth*) provided by Etcd is external to the cluster formed by the master / control plane nodes.
+An External Etcd with Stacked Master cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is external to the cluster formed by the master nodes.
 
-Similar to a Stacked Master and Etcd topology, each master node in an External Etcd with Stacked Master cluster runs an instance of the api-server, scheduler, and controller-manager. The api-server is exposed to worker nodes by using a load balancer (e.g. HAProxy).
+Similar to a Stacked Master and Etcd topology, each master node in an External Etcd with Stacked Master cluster runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes by using a load balancer (e.g. HAProxy).
 
-Unlike a Stacked Master and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the api-server of each master node.
+Unlike a Stacked Master and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the `kube-apiserver` of each master node.
 
-This topology decouples the master and Etcd member. It therefore provides a setup where losing a master / control plane instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master and Etcd topology.
+This topology decouples the master and Etcd member. It therefore provides a setup where losing a master instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master and Etcd topology.
 
 However, this topology requires twice the number of nodes as the Stacked Master and Etcd topology. A minimum of three nodes for master and three nodes for Etcd are required for a cluster with this topology.
 
