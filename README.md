@@ -34,7 +34,7 @@ Network layout:
 * Worker Node 02 (worker02) : 192.168.1.59
 * Worker Node 03 (worker03) : 192.168.1.60
 
-If you're short on resources, proxy01/02 could be combined with etcd01/02, or if you're even shorter on resources, you could run your Etcd services on your Master nodes within a Stacked nodes configuration.
+If you're short on resources, proxy01/02 could be combined with etcd01/02, if running with External Etcd nodes or if you're even shorter on resources, you could run your Etcd services on your Master nodes within a Stacked Master nodes configuration.
 
 ## Differences between Stacked Master and External Etcd Nodes Configurations
 
@@ -43,6 +43,8 @@ If you're short on resources, proxy01/02 could be combined with etcd01/02, or if
 > External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)
 
 ### Stacked Master and Etcd Topology
+
+![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/stacked-etcd.png)
 
 A Stacked Master and Etcd cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is stacked on top of the master nodes.
 
