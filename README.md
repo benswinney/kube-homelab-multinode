@@ -807,7 +807,7 @@ kube-system            coredns-58ddcb86c5-cxlnl                      1/1     Run
 kube-system            coredns-58ddcb86c5-dqzh8                      1/1     Running   0          12m     10.36.0.5      worker01   <none>           <none>
 ```
 
-## 7. Enable DNS Auto-scaling
+## 7. Enable DNS Auto-scaling (Optional)
 
 ```shell
 kubectl apply -f dns-autoscaling/dns-horizontal-autoscaling-deployment.yaml
@@ -837,7 +837,7 @@ kubectl edit configmap config -n metallb-system
 
 ## 9. Install NFS Storage Provisioner
 
-To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
+To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS, Minio etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
 
 > master01
 
@@ -990,3 +990,27 @@ kubectl apply -f nginx-ingress-controller/test-deployment/nginx-test-ingress.yam
 ```
 
 Test via <http://>External IP Address noted above.
+
+## 14. SealedSecrets (bitnami-labs)
+
+> On all master nodes
+
+```shell
+wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.8.3/kubeseal-linux-amd64 -O kubeseal
+sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+rm -f kubeseal
+
+kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.8.3/controller.yaml
+
+mkdir certs
+
+kubeseal --fetch-cert > certs/kubecert.pem
+```
+
+Example Usage:
+```shell
+echo -n <SECRET> | kubectl create secret generic <SECRET-NAME> --dry-run --from-file=<VALUE>=/dev/stdin -o yaml > <SECRET-FILENAME>.yaml
+kubeseal --cert certs/kubecert.pem --format yaml < <SECRET-FILENAME>.yaml > <SEALEDSECRET-FILENAME>.yaml
+``` 
+
+
