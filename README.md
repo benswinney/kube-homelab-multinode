@@ -865,7 +865,7 @@ kubectl create -f helm/helm-rbac.yaml
 kubectl create serviceaccount --namespace kube-system tiller
 kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 sudo snap install helm --classic
-helm init --upgrade
+helm init --upgrade --history-max=200
 kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
 ```
 
@@ -1008,9 +1008,8 @@ kubeseal --fetch-cert > certs/kubecert.pem
 ```
 
 Example Usage:
+
 ```shell
 echo -n <SECRET> | kubectl create secret generic <SECRET-NAME> --dry-run --from-file=<VALUE>=/dev/stdin -o yaml > <SECRET-FILENAME>.yaml
 kubeseal --cert certs/kubecert.pem --format yaml < <SECRET-FILENAME>.yaml > <SEALEDSECRET-FILENAME>.yaml
-``` 
-
-
+```
