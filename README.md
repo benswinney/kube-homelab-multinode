@@ -1,6 +1,6 @@
-# Build a Kubernetes Cluster with multiple nodes
+# Build a Kubernetes Cluster with external etcd Nodes
 
-These instructions will help build up a Kuberneres Cluster with an external Etcd configuration for use within my homelab.
+These instructions will help build up a Kubernetes Cluster with an external etcd nodes configuration for use within my home lab.
 
 Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutanix), create 11 nodes (VM's) with the following minimum requirements as below:
 
@@ -11,68 +11,72 @@ Using Proxmox VE (or Bare-metal or a n other virtualisation platform i.e. Nutani
 | 2     | proxy* | 2 | 2Gb | 20Gb |
 | 3     | worker | 4 | 8Gb | 50Gb |
 
-\* The Proxy nodes will be used to provide LoadBalancing for the masters / control-planes API-Server via HAProxy
+\* The Proxy nodes will be used to provide Load Balancing for the masters / control-planes API-Server via HAProxy
 
-* Under Kubernetes, Master nodes and Control-Plane nodes are one of the same thing. Some people refer to them as Master nodes and others a Control-Plane nodes. For sake of simplicity, I'll refer to these nodes as Master nodes going forward for the purpose of this document.
+* Under Kubernetes, Master nodes and Control-Plane nodes are one of the same. Some people refer to them as a Master node and others a Control-Plane node. For sake of simplicity, I'll refer to them as a Master node going forward for the purpose of this document.
 
 I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
 Kubernetes Version: 1.16
 
-Network layout:
+Network and DNS layout:
 
-* Virtual IP (for LoadBalancing) : 192.168.1.49
-* Master Node 01 (master01) : 192.168.1.50
-* Master Node 02 (master02) : 192.168.1.51
-* Master Node 03 (master03) : 192.168.1.52
-* Etcd Node 01 (etcd01) : 192.168.1.53
-* Etcd Node 02 (etcd02) : 192.168.1.54
-* Etcd Node 03 (etcd03) : 192.168.1.55
-* Proxy Node 01 (proxy01) : 192.168.1.56
-* Proxy Node 02 (proxy02) : 192.168.1.57
-* Worker Node 01 (worker01) : 192.168.1.58
-* Worker Node 02 (worker02) : 192.168.1.59
-* Worker Node 03 (worker03) : 192.168.1.60
+| Role | Hostname | IP Address |
+|------|----------|------------|
+| Virtual IP (for Load Balancing) | kubevip01 | 192.168.1.49 |
+| Master Node 01 | master01 | 192.168.1.50 |
+| Master Node 02 | master02 | 192.168.1.51 |
+| Master Node 03 | master03 | 192.168.1.52 |
+| etcd Node 01 | etcd01 | 192.168.1.53 |
+| etcd Node 02 | etcd02 | 192.168.1.54 |
+| etcd Node 03 | etcd03 | 192.168.1.55 |
+| Proxy Node 01 | proxy01 | 192.168.1.56 |
+| Proxy Node 02 | proxy02 | 192.168.1.57 |
+| Worker Node 01 | worker01 | 192.168.1.58 |
+| Worker Node 02 | worker02 | 192.168.1.59 |
+| Worker Node 03 | worker03 | 192.168.1.60 |
 
-If you're short on resources, proxy01/02 could be combined with etcd01/02, if running with External Etcd nodes or if you're even shorter on resources, you could run your Etcd services on your Master nodes within a Stacked Master nodes configuration.
+If you're short on resources, proxy01/02 could be combined with etcd01/02, if running with external etcd nodes or if you're even shorter on resources, you could run your etcd services on your Master nodes within a Stacked Master nodes configuration.
 
-## Differences between Stacked Master and External Etcd Nodes Configurations
+## Differences between Stacked Master and external etcd node Configurations
 
 > TLDR  
-> Stacked : Master and Etcd Services are ran on the same node, but HA provided by multiple Master nodes (A minimum of 3 nodes)  
-> External Etcd : Etcd run on seperate nodes to the Master (A minimum of 6 nodes)
+> Stacked : Master and etcd Services are ran on the same node, but HA provided by the means of multiple Master nodes (A minimum of 3 nodes)  
+> External etcd : etcd run on separate nodes to the Master (A minimum of 6 nodes)
 
-### Stacked Master and Etcd Topology
+### Stacked Master and etcd Topology
 
-![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/stacked-etcd.png)
+![Stacked etcd nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/stacked-etcd.png)
 
-A Stacked Master and Etcd cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is stacked on top of the master nodes.
+A Stacked Master and etcd cluster are a topology where the distributed data storage cluster (*Source of all truth*) provided by etcd is stacked on top of the master nodes.
 
-Each master node runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes using a load balancer (e.g. HAProxy). A local Etcd member is created and this Etcd member communicates only with the `kube-apiserver` running on this same node. The same applies to the local `kube-controller-manager` and `kube-scheduler` instances.
+Each master node runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes using a load balancer (e.g. HAProxy). A local etcd member is created and this etcd member communicates only with the `kube-apiserver` running on this same node. The same applies to the local `kube-controller-manager` and `kube-scheduler` instances.
 
-This topology couples the master and Etcd members on the same node where they run. It is simpler to set up than a cluster with external Etcd nodes, and simpler to manage for replication.
+This topology couples the master and etcd members on the same node where they run. It is simpler to set up than a cluster with external etcd nodes, and simpler to manage for replication.
 
-However, a Stacked Master and Etcd cluster runs into the risk of failed coupling. If one node goes down, both an Etcd member and a master instance are lost, and redundancy is compromised. You can help mitigate this risk by adding additional master nodes.
+However, a Stacked Master and etcd cluster runs into the risk of failed coupling. If one node goes down, both an etcd member and a master instance are lost, and redundancy is compromised. You can help mitigate this risk by adding additional master nodes.
 
-A minimum of three nodes should be used for a Stacked Master and Etcd cluster.
+A minimum of three nodes should be used for a Stacked Master and etcd cluster.
 
 This is the default topology in `kubeadm`. A local etcd member is created automatically on master nodes when using `kubeadm init` and `kubeadm join --control-plane`.
 
-### External Etcd with Stacked Master Topology
+### External etcd with Stacked Master Topology
 
-![External Etcd Nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/external-etcd.png)
+![External etcd nodes](https://github.com/benswinney/homelab-multinode/blob/master/docs/external-etcd.png)
 
-An External Etcd with Stacked Master cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by Etcd is external to the cluster formed by the master nodes.
+An External Etcd with Stacked Master cluster is a topology where the distributed data storage cluster (*Source of all truth*) provided by etcd is external to the cluster formed by the master nodes.
 
-Similar to a Stacked Master and Etcd topology, each master node in an External Etcd with Stacked Master cluster runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes by using a load balancer (e.g. HAProxy).
+Similar to a Stacked Master and etcd topology, each master node in an external etcd with Stacked Master cluster runs an instance of the `kube-apiserver`, `kube-scheduler`, and `kube-controller-manager`. The `kube-apiserver` is exposed to worker nodes by using a load balancer (e.g. HAProxy).
 
-Unlike a Stacked Master and Etcd topology, the Etcd members run on separate nodes, and each Etcd node communicates with the `kube-apiserver` of each master node.
+Unlike a Stacked Master and etcd topology, the etcd members run on separate nodes, and each etcd node communicates with the `kube-apiserver` of each master node.
 
-This topology decouples the master and Etcd member. It therefore provides a setup where losing a master instance or an Etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master and Etcd topology.
+This topology decouples the master and etcd member. It therefore provides a setup where losing a master instance or an etcd member has less impact and does not affect the cluster redundancy as much as the Stacked Master and etcd topology.
 
-However, this topology requires twice the number of nodes as the Stacked Master and Etcd topology. A minimum of three nodes for master and three nodes for Etcd are required for a cluster with this topology.
+However, this topology requires twice the number of nodes as the Stacked Master and etcd topology. A minimum of three nodes for master and three nodes for etcd are required for a cluster with this topology.
 
-## 1. Create Load Balancer for Kubernetes API-Server
+This is the topology we'll be using. :)  
+
+## 1. Create a Load Balancer for the Kubernetes API-Server
 
 ### Configure HAProxy and Heartbeat
 
@@ -241,7 +245,9 @@ sudo systemctl restart heartbeat
 
 ## 2. Kubernetes Configuration
 
-### Configure Kubernetes & Docker Repositories on ALL Nodes
+### Configure the Kubernetes & Docker Repositories on ALL Nodes
+
+Feel free to swap Docker with another CRI (Container Runtime Interface) e.g. CRI-O, containerd
 
 ```shell
 sudo apt update && sudo apt install -y apt-transport-https curl ca-certificates software-properties-common
@@ -277,9 +283,9 @@ sudo swapoff -a
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
 ```
 
-The `/etc/fstab` file should now be commentted out for the swap mount point
+The `/etc/fstab` file should now be commented out for the swap mount point
 
-### Install Docker packages
+### Install the Docker packages
 
 ```shell
 sudo apt-get install docker-ce=18.06.2~ce~3-0~ubuntu
@@ -291,7 +297,7 @@ sudo apt-get install docker-ce=18.06.2~ce~3-0~ubuntu
 sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu
 ```
 
-### Modify Docker to use systemd driver and overlay2 storage driver
+### Modify Docker to use systemd and overlay2 storage drivers
 
 ```shell
 cat > /etc/docker/daemon.json <<EOF
@@ -312,7 +318,7 @@ EOF
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-### Install Kubernetes Packages
+### Install the Kubernetes Packages (V1.16)
 
 ```shell
 sudo apt install -y kubelet kubeadm kubectl
@@ -330,11 +336,11 @@ sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable kubelet && sudo systemctl start kubelet
 ```
 
-## 3. Etcd Cluster Configuration
+## 3. etcd Cluster Configuration
 
 ### Create new etcd kubelet services configuration file
 
-On ALL Etcd Nodes, create a new kubelet systemd configuration file, with a higher precedence that the kubelet supplied version just installed
+On ALL etcd nodes, create a new kubelet systemd configuration file, with a higher precedence that the kubelet supplied version just installed
 
 ```shell
 cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
@@ -345,13 +351,13 @@ Restart=always
 EOF
 ```
 
-Reload and Restart Kubelet on each of the Etcd Nodes
+Reload and Restart Kubelet on each of the etcd nodes
 
 ```shell
 sudo systemctl daemon-reload && sudo systemctl restart kubelet
 ```
 
-### Generate kubeadm configuration files for all Etcd nodes
+### Generate kubeadm configuration files for all etcd nodes
 
 > etcd01
 
@@ -389,7 +395,7 @@ EOF
 done
 ```
 
-### Generate the Certificate Authority
+### Generate the Certificate Authority files
 
 > etcd01
 
@@ -401,7 +407,7 @@ This creates two files
 `/etc/kubernetes/pki/etcd/ca.crt`
 `/etc/kubernetes/pki/etcd/ca.key`
 
-Create certificates for each Etcd node (etcd01, etcd02, etcd03)
+Create certificates for each etcd node (etcd01, etcd02, etcd03)
 
 ```shell
 kubeadm init phase certs etcd-server --config=/tmp/${HOST2}/kubeadmcfg.yaml
@@ -430,7 +436,7 @@ find /tmp/${HOST2} -name ca.key -type f -delete
 find /tmp/${HOST1} -name ca.key -type f -delete
 ```
 
-### Copy kubeadm configuration and certificates files to the correct etcd node
+### Copy kubeadm configuration and certificates files to the correct etcd nodes
 
 > etcd02
 
@@ -456,7 +462,7 @@ root@HOST $ chown -R root:root pki
 root@HOST $ mv pki /etc/kubernetes/
 ```
 
-### Confirm that the full list of required files exist on each Etcd node
+### Confirm that the full list of required files exists on each etcd node
 
 > etcd01
 
@@ -516,7 +522,7 @@ $HOME
     └── server.key
 ```
 
-### Create Static Pod Manifests on each Etcd node
+### Create a Static Pod Manifests on each etcd node
 
 > etcd01
 
@@ -536,7 +542,7 @@ kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
 kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
 ```
 
-Once the kubeadm commands have completed, check the Cluster health (it may take a few minutes for the Etcd Cluster to become stable)
+Once the kubeadm commands have completed, check the Cluster health (it may take a few minutes for the etcd Cluster to become stable)
 
 ```shell
 docker run --rm -it \
@@ -548,7 +554,7 @@ docker run --rm -it \
 --endpoints https://${HOST0}:2379 cluster-health
 ```
 
-`${HOST0}` should be set to etcd01 IP Address
+`${HOST0}` should be set to etcd01 IP Address Or DNS hostname
 `${ETCD_TAG}` should be set to the version of etcd image
 
 Output should be similar to below
@@ -562,7 +568,7 @@ cluster is healthy
 
 ## 4. Configure the Master Nodes
 
-### Copy Certificate and Key file from Etcd Node
+### Copy Certificate and Key file from an etcd node
 
 > etcd01
 
@@ -740,7 +746,7 @@ master02   Ready    master   2d18h   v1.16.0   192.168.1.51   <none>        Ubun
 master03   Ready    master   2d18h   v1.16.0   192.168.1.52   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
 
-Now all 3 Master nodes (master01 / master02 / master03) are configured, running behing an HAProxy LoadBalancer (proxy01 / proxy02).
+Now all 3 Master nodes (master01 / master02 / master03) are configured, running behind an HAProxy Load Balancer (proxy01 / proxy02).
 
 Next we'll configure the workers.
 
@@ -837,7 +843,7 @@ kubectl edit configmap config -n metallb-system
 
 ## 9. Install NFS Storage Provisioner
 
-To enable automatic provisioning of PersistentStorage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS, Minio etc, but this one works well for my homelab environment. I'll update the README.md in the future with detailed instructions on using other methods.
+To enable automatic provisioning of Persistent Storage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS, Minio etc, but this one works well for my home lab environment. I'll update the README in the future with detailed instructions on using other methods.
 
 > master01
 
@@ -903,7 +909,7 @@ kubectl create -f metric-server/resource-reader.yaml
 
 ### Install the Kubernetes Dashboard
 
-I've updated the Kubernetes Dashboard deployment to use a LoadBalancer (aka MetalLB) and include a admin-user Service Account.
+I've updated the Kubernetes Dashboard deployment to use a Load Balancer (aka MetalLB) and include an admin-user Service Account.
 
 The standard Kubernetes Dashboard deployment will use a NodePort and you will need to create an admin-user Service Account.
 
@@ -943,7 +949,7 @@ Putting an ingress controller in front of our applications provides benefits lik
 
 > master01
 
-Apply the mandatory Nginx Ingress Controller Yaml file.
+Apply the mandatory Nginx Ingress Controller yaml file.
 
 ```shell
 kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-mandatory.yaml
@@ -961,7 +967,7 @@ Now we need to create a Load Balancer Service type for the Nginx Ingress Control
 kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-svc.yaml
 ```
 
-Again, you could apply the Service Type directly from the Kubernetes website, however that Service type is configured for a NodePort Service type and you would need to edit the Service and change it to a LoadBalancer Service type to work with the MetalLB LoadBalancer configuration we've installed.
+Again, you could apply the Service Type directly from the Kubernetes website, however that Service type is configured for a NodePort Service type and you would need to edit the Service and change it to a Load Balancer Service type to work with the MetalLB Load Balancer configuration we've installed.
 
 ```shell
 https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
@@ -975,7 +981,7 @@ Let's check what External IP address has been provided by MetalLB (take a note o
 kubectl -n ingress-nginx get svc -n ingress-nginx
 ```
 
-Once everything has been deployed, let's test to ensure everything is working as we expect. We can test by deploying a small Nginx web server application.
+Once everything has been deployed, let's test by deploying a small Nginx web server application.
 
 Apply the Nginx web server deployment yaml file.
 
