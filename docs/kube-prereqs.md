@@ -88,3 +88,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 ```shell
 sudo systemctl enable kubelet && sudo systemctl start kubelet
 ```
+
+## Modify /etc/hosts
+
+We want to make sure that the /etc/hosts does not resolve the hostname to localhost, if it does, comment it out.

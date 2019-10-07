@@ -31,7 +31,7 @@ I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
 ## Kubernetes Release
 
-Kubernetes Version: 1.16
+Kubernetes Version: 1.16.1
 
 ## Network / Hostname Layout
 
