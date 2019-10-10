@@ -7,7 +7,7 @@ Run the join command that you copied to join master02 to the Kubernetes cluster
 > master02
 
 ```shell
-sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
+sudo kubeadm join vip01:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
 ```
 
 Check for all the Pods to be deployed and in Running and the status of the cluster
@@ -18,14 +18,14 @@ kubectl get pods -n kube-system -o wide
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
 coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      master01   <none>           <none>
 coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      master01   <none>           <none>
-kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
-kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
-kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
-kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-apiserver-master01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-apiserver-master02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-controller-manager-master01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
+kube-controller-manager-master02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
 kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
 kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
-kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
-kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-scheduler-master01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-master02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
 weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   master01   <none>           <none>
 weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   master02   <none>           <none>
 
@@ -46,7 +46,7 @@ Run the join command again join master03 to the Kubernetes cluster
 > master03
 
 ```shell
-sudo kubeadm join 192.168.1.49:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
+sudo kubeadm join vip01:6443 --token f28gzi.k4iydf5rxhchivx6 --discovery-token-ca-cert-hash sha256:2e7d738031ea2c05d4154d3636ced92c390a464d1486d4f4824c112b85a2171f --control-plane
 ```
 
 Check for all the Pods to be deployed and in Running and the status of the cluster
@@ -57,18 +57,18 @@ kubectl get pods -n kube-system -o wide
 NAME                                   READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
 coredns-5644d7b6d9-jdrbt               1/1     Running   1          2d19h   10.32.0.2      master01   <none>           <none>
 coredns-5644d7b6d9-rsxwf               1/1     Running   1          2d19h   10.32.0.3      master01   <none>           <none>
-kube-apiserver-kubemaster01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
-kube-apiserver-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
-kube-apiserver-kubemaster03            1/1     Running   1          2d18h   192.168.1.52   master02   <none>           <none>
-kube-controller-manager-kubemaster01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
-kube-controller-manager-kubemaster02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
-kube-controller-manager-kubemaster03   1/1     Running   1          2d18h   192.168.1.51   master03   <none>           <none>
+kube-apiserver-master01            1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
+kube-apiserver-master02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-apiserver-master03            1/1     Running   1          2d18h   192.168.1.52   master02   <none>           <none>
+kube-controller-manager-master01   1/1     Running   3          2d19h   192.168.1.50   master01   <none>           <none>
+kube-controller-manager-master02   1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-controller-manager-master03   1/1     Running   1          2d18h   192.168.1.51   master03   <none>           <none>
 kube-proxy-kt6jz                       1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
 kube-proxy-g45jt                       1/1     Running   1          2d18h   192.168.1.52   master03   <none>           <none>
 kube-proxy-lwx2k                       1/1     Running   1          2d19h   192.168.1.50   master01   <none>           <none>
-kube-scheduler-kubemaster01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
-kube-scheduler-kubemaster02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
-kube-scheduler-kubemaster03            1/1     Running   1          2d18h   192.168.1.52   master03   <none>           <none>
+kube-scheduler-master01            1/1     Running   2          2d19h   192.168.1.50   master01   <none>           <none>
+kube-scheduler-master02            1/1     Running   1          2d18h   192.168.1.51   master02   <none>           <none>
+kube-scheduler-master03            1/1     Running   1          2d18h   192.168.1.52   master03   <none>           <none>
 weave-net-gktp8                        2/2     Running   2          2d18h   192.168.1.50   master01   <none>           <none>
 weave-net-t87xb                        2/2     Running   2          2d18h   192.168.1.51   master02   <none>           <none>
 weave-net-r56jk                        2/2     Running   2          2d18h   192.168.1.52   master03   <none>           <none>

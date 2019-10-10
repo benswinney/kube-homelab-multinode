@@ -24,9 +24,9 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 > etcd01
 
 ```shell
-export HOST0=192.168.1.53 # etcd01
-export HOST1=192.168.1.54 # etcd02
-export HOST2=192.168.1.55 # etcd03
+export HOST0=etcd01
+export HOST1=etcd02
+export HOST2=etcd03
 
 mkdir -p /tmp/${HOST0}/ /tmp/${HOST1}/ /tmp/${HOST2}/
 
@@ -103,7 +103,7 @@ find /tmp/${HOST1} -name ca.key -type f -delete
 > etcd02
 
 ```shell
-USER=bens
+USER=someuser
 HOST=${HOST1}
 scp -r /tmp/${HOST}/* ${USER}@${HOST}:
 ssh ${USER}@${HOST}
@@ -115,7 +115,7 @@ root@HOST $ mv pki /etc/kubernetes/
 > etcd03
 
 ```shell
-USER=bens
+USER=someuser
 HOST=${HOST2}
 scp -r /tmp/${HOST}/* ${USER}@${HOST}:
 ssh ${USER}@${HOST}
@@ -195,13 +195,13 @@ sudo kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
 > etcd02
 
 ```shell
-kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
+kubeadm init phase etcd local --config=/home/someuser/kubeadmcfg.yaml
 ```
 
 > etcd03
 
 ```shell
-kubeadm init phase etcd local --config=/home/bens/kubeadmcfg.yaml
+kubeadm init phase etcd local --config=/home/someuser/kubeadmcfg.yaml
 ```
 
 Once the kubeadm commands have completed, check the Cluster health (it may take a few minutes for the etcd Cluster to become stable)
@@ -222,8 +222,8 @@ docker run --rm -it \
 Output should be similar to below
 
 ```shell
-member 238b72cdd26e304f is healthy: got healthy result from https://192.168.1.53:2379
-member 8034142cf01c5d1c is healthy: got healthy result from https://192.168.1.54:2379
-member fba9d7bc26d1ea21 is healthy: got healthy result from https://192.168.1.55:2379
+member 238b72cdd26e304f is healthy: got healthy result from https://etcd01:2379
+member 8034142cf01c5d1c is healthy: got healthy result from https://etcd02:2379
+member fba9d7bc26d1ea21 is healthy: got healthy result from https://etcd03:2379
 cluster is healthy
 ```
