@@ -27,7 +27,7 @@ Create a file called `kubeadm-config.yaml`
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: v1.16.1
+kubernetesVersion: v1.14.7
 apiServer:
   certSANs:
   - "192.168.1.49"

@@ -71,16 +71,16 @@ EOF
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-## Install the Kubernetes Packages (V1.16.1)
+## Install the Kubernetes Packages (V1.16.1) - Now 1.14.7 for KubeFlow
 
 ```shell
-sudo apt install -y kubelet kubeadm kubectl
+sudo apt install -y kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00
 ```
 
 ## Hold Kubernetes Packages
 
 ```shell
-sudo apt-mark hold kubelet kubeadm kubectl
+sudo apt-mark hold kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00
 ```
 
 ## Enable & Start Kubelet (if not already started)
@@ -91,4 +91,4 @@ sudo systemctl enable kubelet && sudo systemctl start kubelet
 
 ## Modify /etc/hosts
 
-We want to make sure that the /etc/hosts does not resolve the hostname to localhost, if it does, comment it out.
+We want to make sure that the /etc/hosts does not resolve the hostname to 127.0.0.1, if it does, comment it out.
