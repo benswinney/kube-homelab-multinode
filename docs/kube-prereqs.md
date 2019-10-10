@@ -41,7 +41,7 @@ The `/etc/fstab` file should now be commented out for the swap mount point
 ## Install the Docker packages
 
 ```shell
-sudo apt-get install docker-ce=18.06.2~ce~3-0~ubuntu
+sudo apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu
 ```
 
 ## Hold Docker Version
@@ -71,7 +71,7 @@ EOF
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-## Install the Kubernetes Packages (V1.16)
+## Install the Kubernetes Packages (V1.16.1)
 
 ```shell
 sudo apt install -y kubelet kubeadm kubectl

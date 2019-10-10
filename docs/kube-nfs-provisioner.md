@@ -2,6 +2,14 @@
 
 To enable automatic provisioning of Persistent Storage for our deployments, I use the NFS Storage Provisioner method, there are many others like Rook.io, OpenEBS, Minio etc, but this one works well for my home lab environment. I'll update the README in the future with detailed instructions on using other methods.
 
+> On ALL worker nodes
+
+Add the nfs-common package if required.
+
+```shell
+sudo apt update && sudo apt install -y nfs-common
+```
+
 > master01
 
 ```shell

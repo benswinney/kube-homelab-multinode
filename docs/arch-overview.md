@@ -2,7 +2,7 @@
 
 ## Nodes
 
-Since I've Proxmox VE in my "home lab" environment, I created eleven (11) nodes for use within the Kubernetes Cluster. You could use any virtualisation platform you desire i.e. VMWare ESXi, Nutanix or even use Bare-metal nodes, if so inclined. 
+Since I've Proxmox VE in my "home lab" environment, I created eleven (11) nodes for use within the Kubernetes Cluster. You could use any virtualisation platform you desire i.e. VMWare ESXi, Nutanix or even use Bare-metal nodes, if so inclined.
 
 I created my 11 nodes (VM's) with the following requirements as below.
 
@@ -31,7 +31,7 @@ I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
 ## Kubernetes Release
 
-Kubernetes Version: 1.16.1
+Kubernetes Version: 1.16.1 **Update: Due to KubeFlow V0.6.2 not being compatible with Kubernetes versions > 1.14.7, cluster was built using 1.14.7**
 
 ## Network / Hostname Layout
 

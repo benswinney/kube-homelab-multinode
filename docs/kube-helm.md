@@ -17,12 +17,12 @@ Install the helm cli on the remaining Master nodes. This allows us to interactiv
 
 ```shell
 sudo snap install helm --classic
-helm init
+helm init --upgrade --history-max=200
 ```
 
 > master03
 
 ```shell
 sudo snap install helm --classic
-helm init
+helm init --upgrade --history-max=200
 ```
