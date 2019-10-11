@@ -31,23 +31,15 @@ sudo apt update
 ## Disable Swap
 
 ```shell
-sudo swapoff -a
-
-sudo sed -i '/ swap / s/^/#/' /etc/fstab
+sudo swapoff -a && sudo sed -i '/ swap / s/^/#/' /etc/fstab
 ```
 
 The `/etc/fstab` file should now be commented out for the swap mount point
 
-## Install the Docker packages
+## Install and Hold the Docker packages
 
 ```shell
-sudo apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu
-```
-
-## Hold Docker Version
-
-```shell
-sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu
+sudo apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu && sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu
 ```
 
 ## Modify Docker to use systemd and overlay2 storage drivers
@@ -71,16 +63,10 @@ EOF
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-## Install the Kubernetes Packages (V1.16.1) - Now 1.14.7 for KubeFlow
+## Install and Hold Kubernetes Packages (V1.16.1) - Now 1.14.7 for KubeFlow
 
 ```shell
-sudo apt install -y kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00
-```
-
-## Hold Kubernetes Packages
-
-```shell
-sudo apt-mark hold kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00
+sudo apt install -y kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00 && sudo apt-mark hold kubelet=1.14.7-00 kubeadm=1.14.7-00 kubectl=1.14.7-00
 ```
 
 ## Enable & Start Kubelet (if not already started)
