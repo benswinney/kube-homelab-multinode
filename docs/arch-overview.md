@@ -31,13 +31,13 @@ I used Ubuntu Server 18.04 LTS as the OS for all the nodes.
 
 ## Kubernetes Release
 
-Kubernetes Version: 1.16.1 **Update: Due to KubeFlow V0.6.2 not being compatible with Kubernetes versions > 1.14.7, cluster was built using 1.14.7**
+Kubernetes Version: 1.15.8
 
 ## Network / Hostname Layout
 
 | Role | Hostname | IP Address |
 |------|----------|------------|
-| Virtual IP (for Load Balancing) | vip01 | 192.168.1.49 |
+| Virtual IP (for Load Balancing) | vip | 192.168.1.49 |
 | Master Node 01 | master01 | 192.168.1.50 |
 | Master Node 02 | master02 | 192.168.1.51 |
 | Master Node 03 | master03 | 192.168.1.52 |
