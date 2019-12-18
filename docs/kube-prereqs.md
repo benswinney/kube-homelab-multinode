@@ -39,7 +39,7 @@ The `/etc/fstab` file should now be commented out for the swap mount point
 ## Install and Hold the Docker packages
 
 ```shell
-sudo apt-get update && sudo apt-get install \
+sudo apt-get update && sudo apt-get install -y \
   containerd.io=1.2.10-3 \
   docker-ce=5:19.03.4~3-0~ubuntu-$(lsb_release -cs) \
   docker-ce-cli=5:19.03.4~3-0~ubuntu-$(lsb_release -cs)
