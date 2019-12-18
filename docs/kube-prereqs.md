@@ -74,10 +74,10 @@ sudo mkdir -p /etc/systemd/system/docker.service.d
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-## Install and Hold Kubernetes Packages (V1.15.8)
+## Install and Hold Kubernetes Packages (V1.15.7)
 
 ```shell
-sudo apt install -y kubelet=1.15.8-00 kubeadm=1.15.8-00 kubectl=1.15.8-00 && sudo apt-mark hold kubelet=1.15.8-00 kubeadm=1.15.8-00 kubectl=1.15.8-00
+sudo apt install -y kubelet=1.15.7-00 kubeadm=1.15.7-00 kubectl=1.15.7-00 && sudo apt-mark hold kubelet=1.15.7-00 kubeadm=1.15.7-00 kubectl=1.15.7-00
 ```
 
 ## Enable & Start Kubelet (if not already started)
