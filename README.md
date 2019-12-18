@@ -19,7 +19,9 @@ Any one with the passion (or just a bunch of free time) to build their own Kuber
    - [Pre-requisites](docs/kube-prereqs.md)
    - [etcd](docs/kube-external-etcd.md)
    1. Masters
-      - [Configure Master Node](docs/kube-master.md)
+      1. External or Stacked Etcd
+         - [Configure Master Node with External etcd](docs/kube-master-external-etcd.md)
+         - [Configure Master Node with Stacked etcd](docs/kube-master-stacked-etcd.md)
       - [CNI Plugins](docs/kube-cni-plugins.md)
       - [Storage Provisioner](docs/kube-nfs-provisioner.md)
    2. Create an Highly Available Kube-APIServer
