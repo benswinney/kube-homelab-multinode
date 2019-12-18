@@ -1,8 +1,8 @@
-# Building a Kubernetes Cluster with external etcd nodes for an on-prem "home lab"
+# Building a Kubernetes Cluster with external or stacked etcd configuration for an on-prem "home lab"
 
 I decided to put together a bunch of instructions on building a Kubernetes Cluster. Having built (and broke) many Kubernetes clusters over the past few years, I thought it would be useful to actually document the steps so that anyone wanting a simple set of instructions to follow can use these to quickly spin up a on-prem Kubernetes Cluster.
 
-These instructions are not intended for Production Grade Kubernetes Clusters, as there are many examples of Enterprise / Production Grade Kubernetes Cluster providers e.g. Red Hat OpenShift, IBM Cloud Private, but they will help you build up a Kubernetes Cluster with an external etcd nodes configuration for use within a non-production environment or as I've done, in my own "home lab" environment.
+These instructions are not intended for Production Grade Kubernetes Clusters, as there are many examples of Enterprise / Production Grade Kubernetes Cluster providers e.g. Red Hat OpenShift, IBM Cloud Private, but they will help you build up a Kubernetes Cluster with an external or stacked etcd configuration for use within a non-production environment or as I've done, in my own "home lab" environment.
 
 ## Audience
 

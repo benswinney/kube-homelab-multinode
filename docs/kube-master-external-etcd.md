@@ -1,4 +1,4 @@
-# Configure the Master Nodes
+# Configure the Master Nodes with external etcd
 
 ## Copy Certificate and Key file from an etcd node
 
@@ -27,7 +27,7 @@ Create a file called `kubeadm-config.yaml`
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: v1.14.7
+kubernetesVersion: v1.15.7
 apiServer:
   certSANs:
   - "vip01"

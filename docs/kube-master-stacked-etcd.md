@@ -1,46 +1,17 @@
-# Configure the Master Nodes
-
-## Copy Certificate and Key file from an etcd node
-
-> etcd01
-
-```shell
-export CONTROL_PLANE="someuser@master01"
-scp /etc/kubernetes/pki/etcd/ca.crt "${CONTROL_PLANE}":
-scp /etc/kubernetes/pki/apiserver-etcd-client.crt "${CONTROL_PLANE}":
-scp /etc/kubernetes/pki/apiserver-etcd-client.key "${CONTROL_PLANE}":
-```
+# Configure the Master Node with Stacked etcd
 
 ## Configure first Master Node (master01)
-
-First we need to move the certificates and key files we copied from the etcd01 node to the correct location (`/etc/kubernetes/pki/etcd`)
-
-```shell
-sudo mkdir -p /etc/kubernetes/pki/etcd/
-sudo cp /home/bens/ca.crt /etc/kubernetes/pki/etcd/
-sudo cp /home/bens/apiserver-etcd-client.crt /etc/kubernetes/pki/
-sudo cp /home/bens/apiserver-etcd-client.key /etc/kubernetes/pki/
-```
 
 Create a file called `kubeadm-config.yaml`
 
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: v1.14.7
+kubernetesVersion: v1.15.7
 apiServer:
   certSANs:
   - "vip01"
 controlPlaneEndpoint: "vip01:6443"
-etcd:
-    external:
-        endpoints:
-        - https://etcd01:2379
-        - https://etcd02:2379
-        - https://etcd03:2379
-        caFile: /etc/kubernetes/pki/etcd/ca.crt
-        certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
-        keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
 networking:
   podSubnet: 10.11.0.0/16
   serviceSubnet: 10.96.0.0/12
