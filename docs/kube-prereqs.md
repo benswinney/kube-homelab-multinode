@@ -39,7 +39,12 @@ The `/etc/fstab` file should now be commented out for the swap mount point
 ## Install and Hold the Docker packages
 
 ```shell
-sudo apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu && sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu
+sudo apt-get update && sudo apt-get install \
+  containerd.io=1.2.10-3 \
+  docker-ce=5:19.03.4~3-0~ubuntu-$(lsb_release -cs) \
+  docker-ce-cli=5:19.03.4~3-0~ubuntu-$(lsb_release -cs)
+
+sudo apt-mark hold containerd.io=1.2.10-3 docker-ce=5:19.03.4~3-0~ubuntu-$(lsb_release -cs) docker-ce-cli=5:19.03.4~3-0~ubuntu-$(lsb_release -cs)
 ```
 
 ## Modify Docker to use systemd and overlay2 storage drivers
