@@ -95,7 +95,7 @@ Now let’s try to login into this new registry, from any node with installed do
 master02# docker login x.x.x.x:5000
 Username: admin
 Password: some-password
-Error response from daemon: Get https://192.168.0.40:5000/v1/users/: x509: certificate signed by unknown authority
+Error response from daemon: Get https://x.x.x.x:5000/v1/users/: x509: certificate signed by unknown authority
 ```
 
 This error happens because we use a self-signed certificate and docker know nothing about it, if you have a valid certificate, you can use them instead.
@@ -105,13 +105,13 @@ In our example, we need to add the self-created certificate to docker trusted ce
 On all these nodes you need to run:
 
 ```shell
-mkdir -p /etc/docker/certs.d/192.168.0.40:5000
+mkdir -p /etc/docker/certs.d/x.x.x.x:5000
 
 # Copy in there domain.crt file from registry /opt/registry/certs
-scp 192.168.0.40:/opt/registry/certs/domain.crt /etc/docker/certs.d/192.168.0.40:5000
+scp x.x.x.x:/opt/registry/certs/domain.crt /etc/docker/certs.d/x.x.x.x:5000
 
 # Rename file
-cd /etc/docker/certs.d/192.168.0.40:5000
+cd /etc/docker/certs.d/x.x.x.x:5000
 mv domain.crt ca.crt
 
 # Reload docker engine
@@ -140,10 +140,16 @@ latest: Pulling from library/nginx
 e83729dd399a: Pull complete 
 ebc6a67df66d: Pull complete 
 Digest: sha256:dff6326b09c76bef1425ee64c2e218b38737cdb5412b8ccf84ca70740bfa1db2
-Status: Downloaded newer image for nginx:latestsome-host# docker images
+Status: Downloaded newer image for nginx:latest
+
+master01# docker images
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-nginx               latest              2bcb04bdb83f        11 hours ago        109MBsome-host# docker tag 2bcb04bdb83f 192.168.0.40:5000/nginxsome-host# docker push 192.168.0.40:5000/nginx
-The push refers to a repository [192.168.0.40:5000/nginx]
+nginx               latest              2bcb04bdb83f        11 hours ago        109MB
+
+master01# docker tag 2bcb04bdb83f x.x.x.x:5000 nginx
+
+master01# docker push x.x.x..:5000/nginx
+The push refers to a repository [x.x.x.x:5000/nginx]
 7e274c0effe8: Pushed 
 dd0338cdfab3: Pushed 
 5dacd731af1b: Pushed 
@@ -201,12 +207,15 @@ metadata:
 spec:
  containers:
  - name: nginx-test
-   image: 192.168.0.40:5000/nginx
+   image: x.x.x.x:5000/nginx
  imagePullSecrets:
  - name: registrypullsecretcontrol
  
 kubectl create -f local-registry-nginx.yaml
-pod/nginx-test createdcontrol# kubectl get ponginx-test                          1/1     Running   0          9s
+pod/nginx-test created
+
+master01# kubectl get pods
+nginx-test                          1/1     Running   0          9s
 ```
 
 As you can see, there was successfully downloaded and started the nginx pod, from our local docker registry.
@@ -218,12 +227,12 @@ master01# kubectl describe pod nginx-test.... ... ..
 Containers:
   nginx-test:
     Container ID:   docker://e31c8c4f444a02467d8352b1ea2b4e7688176969c962e736590931a0ce594e8f
-    Image:          192.168.0.40:5000/nginx
-    Image ID:       docker-pullable://192.168.0.40:5000/nginx@sha256:gc4887a794219dc5e3459abc1575f1fa293da344772c33f5bf0as6767371s4e3
+    Image:          x.x.x.x:5000/nginx
+    Image ID:       docker-pullable://x.x.x.x:5000/nginx@sha256:gc4887a794219dc5e3459abc1575f1fa293da344772c33f5bf0as6767371s4e3
     Port:           <none>
     Host Port:      <none>
     State:          Running
-      Started:      Wed, 27 Mar 2019 12:36:41 +0100
+      Started:      Tue, 28 Mar 2020 10:11:45 +0100
     Ready:          True
     Restart Count:  0
     Environment:    <none>
