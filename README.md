@@ -37,3 +37,4 @@ Any one with the passion (or just a bunch of free time) to build their own Kuber
    - [Kubernetes Dashboard](docs/kube-dashboard.md)
    4. Optional
       - [DNS Auto-Scaling](docs/kube-dnsautoscale.md)
+      - [Internal Docker Registory](doc/docker-reg.md)
