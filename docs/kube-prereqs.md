@@ -40,11 +40,9 @@ The `/etc/fstab` file should now be commented out for the swap mount point
 
 ```shell
 sudo apt-get update && sudo apt-get install -y \
-  containerd.io=1.2.10-3 \
-  docker-ce=5:19.03.4~3-0~ubuntu-$(lsb_release -cs) \
-  docker-ce-cli=5:19.03.4~3-0~ubuntu-$(lsb_release -cs)
+docker-ce=18.06.2~ce~3-0~ubuntu
 
-sudo apt-mark hold containerd.io=1.2.10-3 docker-ce=5:19.03.4~3-0~ubuntu-$(lsb_release -cs) docker-ce-cli=5:19.03.4~3-0~ubuntu-$(lsb_release -cs)
+sudo apt-mark hold docker-ce=18.06.2~ce~3-0~ubuntu 
 ```
 
 ## Modify Docker to use systemd and overlay2 storage drivers
@@ -60,12 +58,8 @@ cat > /etc/docker/daemon.json <<EOF
   "storage-driver": "overlay2"
 }
 EOF
-```
 
-## Create systemd docker directory
-
-```shell
-sudo mkdir -p /etc/systemd/system/docker.service.d
+mkdir -p /etc/systemd/system/docker.service.d
 ```
 
 ## Restart docker
@@ -74,10 +68,10 @@ sudo mkdir -p /etc/systemd/system/docker.service.d
 sudo systemctl daemon-reload && sudo systemctl restart docker
 ```
 
-## Install and Hold Kubernetes Packages (V1.15.7)
+## Install and Hold Kubernetes Packages (V1.15.8)
 
 ```shell
-sudo apt install -y kubelet=1.15.7-00 kubeadm=1.15.7-00 kubectl=1.15.7-00 && sudo apt-mark hold kubelet=1.15.7-00 kubeadm=1.15.7-00 kubectl=1.15.7-00
+sudo apt install -y kubelet=1.15.8-00 kubeadm=1.15.8-00 kubectl=1.15.8-00 && sudo apt-mark hold kubelet=1.15.8-00 kubeadm=1.15.8-00 kubectl=1.15.8-00
 ```
 
 ## Enable & Start Kubelet (if not already started)
