@@ -13,7 +13,7 @@ apiServer:
   - "vip01"
 controlPlaneEndpoint: "vip01:6443"
 networking:
-  podSubnet: 10.11.0.0/16
+  podSubnet: 10.11.0.0/16 # If using Calcio, this should be 192.168.0.0/16
   serviceSubnet: 10.96.0.0/12
 ```
 
