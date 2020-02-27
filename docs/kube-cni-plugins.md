@@ -9,9 +9,11 @@ kubectl apply -n kube-system -f "https://cloud.weave.works/k8s/net?k8s-version=$
 
 If using Calcio
 
+On Each Node:
 
 ```shell
-sysctl net.ipv4.conf.all.forwarding=1 # On each node
+sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
 
 kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
 ```
