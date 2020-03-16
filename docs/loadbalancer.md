@@ -44,7 +44,7 @@ defaults
     timeout client 5000ms
 
 frontend kubernetes
-    bind 192.168.1.49:6443
+    bind vip:6443
     option tcplog
     mode tcp
     default_backend kubernetes-master-nodes
@@ -53,9 +53,9 @@ backend kubernetes-master-nodes
     mode tcp
     balance roundrobin
     option tcp-check
-    server kube-master-0 192.168.1.50:6443 check fall 3 rise 2
-    server kube-master-1 192.168.1.51:6443 check fall 3 rise 2
-    server kube-master-2 192.168.1.52:6443 check fall 3 rise 2
+    server kube-master-0 master01:6443 check fall 3 rise 2
+    server kube-master-1 master02:6443 check fall 3 rise 2
+    server kube-master-2 master03:6443 check fall 3 rise 2
 ```
 
 Enable and Start HAProxy & Heartbeat on both Proxy nodes
@@ -74,6 +74,10 @@ sudo netstat -ntulp
 ```
 
 Create a authkeys `/etc/ha.d/authkeys` file on both Proxy nodes, ensuring it's readable/writable by root only (`chmod 600 /etc/ha.d/authkeys`).
+
+```shell
+sudo touch /etc/ha.d/authkeys && sudo chmod 600 /etc/ha.d/authkeys
+```
 
 Firstly generate a md5sum password
 
@@ -107,12 +111,12 @@ deadtime 10
 #       What UDP port to use for udp or ppp-udp communication?
 #
 udpport 694
-bcast en0
-mcast en0 225.255.255.0 694 1 0
-ucast en0 192.168.1.56
+bcast ens18
+mcast ens18 225.255.255.0 694 1 0
+ucast ens18 192.168.1.56
 #
 #       What interfaces to heartbeat over?
-udp en0
+udp ens18
 #
 #       Facility to use for syslog()/logger (alternative to log/debugfile)
 #
@@ -138,12 +142,12 @@ deadtime 10
 #       What UDP port to use for udp or ppp-udp communication?
 #
 udpport 694
-bcast en0
-mcast en0 225.255.255.0 694 1 0
-ucast en0 192.168.1.57
+bcast ens18
+mcast ens18 225.255.255.0 694 1 0
+ucast ens18 192.168.1.57
 #
 #       What interfaces to heartbeat over?
-udp en0
+udp ens18
 #
 #       Facility to use for syslog()/logger (alternative to log/debugfile)
 #
