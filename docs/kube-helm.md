@@ -1,5 +1,23 @@
 # Helm
 
+## Helm V3
+
+> master01
+
+```shell
+$ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+$ chmod 700 get_helm.sh
+$ ./get_helm.sh
+```
+
+Add Stable Helm Repo
+
+```shell
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+```
+
+## Helm V2
+
 > master01
 
 ```shell
