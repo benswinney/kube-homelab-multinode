@@ -1,4 +1,4 @@
-# Ingress Controller (nginx)
+# Cert-Manager & Lets Encrypt 
 
 Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer.
 
