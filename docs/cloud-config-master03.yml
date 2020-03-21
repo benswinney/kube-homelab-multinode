@@ -10,9 +10,15 @@ rancher:
                 gateway: 192.168.1.1
                 mtu: 1500
                 dhcp: false
+            eth1:
+                address: 10.9.1.6/24
+                mtu: 1500
+                dhcp: false
         dns:
             nameservers:
                 - 192.168.1.1
+            search:
+              - home.swinney.io
 
 ssh_authorized_keys:
     - 'ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBACq1GMxxOJIgn+XZc1gvkCBB3hBL0s1ewFaKOJJEaqm/WkYzSoZpGaQK0QuyF7wn0pMTVM7nU9aHXY/94TTcu4U+gAjTuIm1uJgAyUJY+WA/hoRMruYODeeghV8KcT+ttP7mHW8RlsJdjGlrNNBnKQ/FT7X1nxU5Lxv4/bEYujiyQcHkg== benswinney@Bens-MBP.home.swinney.io'
