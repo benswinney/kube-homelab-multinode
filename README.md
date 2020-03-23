@@ -24,6 +24,7 @@ Any one with the passion (or just a bunch of free time) to build their own Kuber
          - [Configure Master Node with Stacked etcd](docs/kube-master-stacked-etcd.md)
       - [CNI Plugins](docs/kube-cni-plugins.md)
       - [Storage Provisioner](docs/kube-nfs-provisioner.md)
+      - [Storage Provisioner - Ceph](doc/kube-storage.md)
    2. Create an Highly Available Kube-APIServer
       - [Join Additional Masters](docs/kube-extra-masters.md)
    3. Workers
