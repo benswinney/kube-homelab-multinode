@@ -73,7 +73,7 @@ ceph --cluster ceph auth get-key client.kube
 ```shell
 kubectl create secret generic ceph-secret-kube \
     --type="kubernetes.io/rbd" \
-    --from-literal=key='<client.kube key> \
+    --from-literal=key='<client.kube key>' \
     --namespace=kube-system
 ```
 
