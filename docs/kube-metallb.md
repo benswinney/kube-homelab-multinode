@@ -5,6 +5,7 @@ Apply MetalLB deployment
 > master01
 
 ```shell
+kubectl create ns metallb-system
 kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.9.2/manifests/metallb.yaml
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 ```
