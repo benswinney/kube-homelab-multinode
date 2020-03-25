@@ -34,6 +34,12 @@ Apply Cephfs Storage Class
 kubectl apply -f storage/Ceph-FS-StorageClass.yaml
 ```
 
+Patch to make default class
+
+```shell
+kubectl patch storageclass cephfs -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
 ## Ceph RBD
 
 Apply Ceph RBD Provisioner

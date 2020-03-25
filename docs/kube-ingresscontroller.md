@@ -1,48 +1,59 @@
-# Ingress Controller (nginx)
-
-Realistically, we can skip an Ingress Contoller and expose our applications directly via the MetalLB load balancer.
+# Ingress Controller (nginx) with Certmanager and Lets Encrypt
 
 Putting an ingress controller in front of our applications provides benefits like basic load balancing, SSL/TLS termination, support for URI rewrites, and upstream SSL/TLS encryption.
-
-## Easier Ingress Controller install
-
-```shell
-helm install ingress stable/nginx-ingress --set controller.hostNetwork=true,controller.kind=DaemonSet
-```
-
-> master01
 
 Apply the mandatory Nginx Ingress Controller yaml file.
 
 ```shell
-kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-mandatory.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
 ```
 
-Alternatively, you can apply direct from the Kubernetes website:
+Now we need to create a Load Balancer Service type for the Nginx Ingress Controller. We will use MetalLB as the Bare-Metal LB.
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
 ```
-
-Now we need to create a Load Balancer Service type for the Nginx Ingress Controller.
-
-```shell
-kubectl apply -f nginx-ingress-controller/nginx-ingress-controller-svc.yaml
-```
-
-Again, you could apply the Service Type directly from the Kubernetes website, however that Service type is configured for a NodePort Service type and you would need to edit the Service and change it to a Load Balancer Service type to work with the MetalLB Load Balancer configuration we've installed.
-
-```shell
-https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
-```
-
-Remember to modify the Service Type after applying the configuration.
 
 Let's check what External IP address has been provided by MetalLB (take a note of it for later)
 
 ```shell
 kubectl -n ingress-nginx get svc -n ingress-nginx
 ```
+
+Confirm that the Ingress Controller Pods have started:
+
+```shell
+kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx
+```
+
+Now, confirm that the DigitalOcean Load Balancer was successfully created by fetching the Service details with kubectl:
+
+```shell
+kubectl get svc --namespace=ingress-nginx
+```
+
+This load balancer receives traffic on HTTP and HTTPS ports 80 and 443, and forwards it to the Ingress Controller Pod. The Ingress Controller will then route the traffic to the appropriate backend Service.
+
+We can now point our DNS records at this external Load Balancer and create some Ingress Resources to implement traffic routing rules. Before we do that, we'll now install cert-manager and letsencrypt to provide secure TLS certificates for our services
+
+Start by creating the cert-manager namespace
+
+```shell
+kubectl create namespace cert-manager
+```
+
+Next install cert-manager and it's CRD's
+
+```shell
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.yaml
+```
+
+Lets test by using the LetEncrypt staging server to issue a test certificate
+
+
+
+
+
 
 Once everything has been deployed, let's test by deploying a small Nginx web server application.
 

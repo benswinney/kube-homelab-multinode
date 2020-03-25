@@ -37,3 +37,13 @@ worker01   Ready    <none>   2d19h   v1.16.0   192.168.1.58   <none>        Ubun
 worker02   Ready    <none>   2d19h   v1.16.0   192.168.1.59   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 worker03   Ready    <none>   2d19h   v1.16.0   192.168.1.60   <none>        Ubuntu 18.04.3 LTS   4.15.0-64-generic   docker://18.6.2
 ```
+
+Add workers if token has expired
+
+```shell
+sudo kubeadm token list
+
+sudo kubeadm token create #If expired
+
+
+```
