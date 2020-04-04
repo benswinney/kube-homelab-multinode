@@ -7,7 +7,7 @@ Create a file called `kubeadm-config.yaml`
 ```shell
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: v1.15.8
+kubernetesVersion: v1.15.11
 apiServer:
   certSANs:
   - "vip"
@@ -15,6 +15,10 @@ controlPlaneEndpoint: "vip:6443"
 networking:
   podSubnet: 10.11.0.0/16 # If using Calcio, this should be 192.168.0.0/16
   serviceSubnet: 10.96.0.0/12
+apiServer:
+  extraArgs:
+    "service-account-issuer": "kubernetes.default.svc"
+    "service-account-signing-key-file": "/etc/kubernetes/pki/sa.key"
 ```
 
 Initialize with `kubeadm`
